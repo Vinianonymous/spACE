@@ -1,0 +1,8 @@
+{
+  "browser": "158.0.8127.18",
+  "platform": "linux",
+  "architecture": "x64",
+  "node": "v26.10.0",
+  "errors": [],
+  "renderer": "Forced SwiftShader for reproducible headless smoke testing; NOT reference hardware acceptance."
+}

@@ -1,0 +1,18 @@
+{
+  "gpu": "Mesa Intel(R) Graphics (MTL)",
+  "display": "1920x1080 @ DPR 1",
+  "internalResolution": "1138x640",
+  "preset": "medium",
+  "startedAt": "2026-11-08T19:03:15.143Z",
+  "capturedAt": "2026-11-08T19:04:16.294Z",
+  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+  "scene": "Mars proving ground: up to 8 moving Trusan drones (destroyed targets removed), 160 asteroids, planet, station, cannon/missile effects",
+  "sampleCount": 3635,
+  "activeSeconds": 60.62,
+  "medianFps": 58.5,
+  "p95FrameMs": 17.12,
+  "note": "Active gameplay only. Preset changes reset sampling. Verify physical hardware separately; headless/software-rendered results are not release acceptance evidence.",
+  "mode": "exercise",
+  "missionStage": "flight",
+  "aliveTargets": 8
+}

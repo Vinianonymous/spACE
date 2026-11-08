@@ -1,0 +1,1298 @@
+{
+  "config": {
+    "argv": [
+      "/home/vinny/.local/node-v26.10.0-linux-x64/bin/node",
+      "/home/vinny/Documents/ai/spACE/node_modules/.bin/playwright",
+      "test",
+      "--config",
+      "playwright.acceptance.config.ts"
+    ],
+    "configFile": "/home/vinny/Documents/ai/spACE/playwright.acceptance.config.ts",
+    "rootDir": "/home/vinny/Documents/ai/spACE/tests",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chrome-gpu",
+        "name": "chrome-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "edge-gpu",
+        "name": "edge-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "firefox-gpu",
+        "name": "firefox-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "filteredProjects": [
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "chrome-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "snapshotDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000,
+        "use": {
+          "baseURL": "https://localhost:8443",
+          "ignoreHTTPSErrors": true,
+          "headless": true,
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "screenshot": "only-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.8127.18 Safari/537.36",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "launchOptions": {
+            "executablePath": "/tmp/opencode/space-browsers/chrome-157.0.8103.38-1/opt/google/chrome/chrome",
+            "args": [
+              "--enable-gpu",
+              "--use-gl=angle",
+              "--use-angle=gl",
+              "--ignore-gpu-blocklist",
+              "--ozone-platform=x11",
+              "--no-first-run"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "chrome-gpu"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "edge-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "snapshotDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000,
+        "use": {
+          "baseURL": "https://localhost:8443",
+          "ignoreHTTPSErrors": true,
+          "headless": true,
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "screenshot": "only-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/158.0.8127.18 Safari/537.36 Edg/158.0.8127.18",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "chromium",
+          "launchOptions": {
+            "executablePath": "/tmp/opencode/space-browsers/edge-157.0.4341.42-1/opt/microsoft/msedge/msedge",
+            "args": [
+              "--enable-gpu",
+              "--use-gl=angle",
+              "--use-angle=gl",
+              "--ignore-gpu-blocklist",
+              "--ozone-platform=x11",
+              "--no-first-run"
+            ]
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "edge-gpu"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "/home/vinny/Documents/ai/spACE/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "firefox-gpu",
+        "testDir": "/home/vinny/Documents/ai/spACE/tests",
+        "snapshotDir": "/home/vinny/Documents/ai/spACE/tests",
+        "testIgnore": [],
+        "testMatch": [
+          "browser/**/*.spec.ts",
+          "acceptance/**/*.spec.ts"
+        ],
+        "timeout": 120000,
+        "use": {
+          "baseURL": "https://localhost:8443",
+          "ignoreHTTPSErrors": true,
+          "headless": true,
+          "viewport": {
+            "width": 1920,
+            "height": 1080
+          },
+          "screenshot": "only-on-failure",
+          "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:159.0) Gecko/20100101 Firefox/159.0",
+          "screen": {
+            "width": 1920,
+            "height": 1080
+          },
+          "deviceScaleFactor": 1,
+          "isMobile": false,
+          "hasTouch": false,
+          "defaultBrowserType": "firefox",
+          "launchOptions": {
+            "env": {
+              "SHELL": "/usr/bin/zsh",
+              "npm_command": "run",
+              "npm_config_userconfig": "/home/vinny/.npmrc",
+              "COLORTERM": "truecolor",
+              "HYPRLAND_CMD": "Hyprland --watchdog-fd 4",
+              "npm_config_cache": "/home/vinny/.npm",
+              "XDG_SESSION_PATH": "/org/freedesktop/DisplayManager/Session2",
+              "XDG_BACKEND": "wayland",
+              "AI_AGENT": "opencode",
+              "_P9K_TTY": "/dev/pts/0",
+              "NODE": "/home/vinny/.local/node-v26.10.0-linux-x64/bin/node",
+              "VSSCRIPT_PATH": "/usr/lib/python3.14/site-packages/vapoursynth/libvsscript.so",
+              "LC_ADDRESS": "es_PY.UTF-8",
+              "LC_NAME": "es_PY.UTF-8",
+              "P9K_TTY": "old",
+              "AGENT": "1",
+              "COLOR": "0",
+              "npm_config_local_prefix": "/home/vinny/Documents/ai/spACE",
+              "DESKTOP_SESSION": "/usr/share/wayland-sessions/hyprland.desktop",
+              "LC_MONETARY": "es_PY.UTF-8",
+              "KITTY_PID": "55162",
+              "HL_INITIAL_WORKSPACE_TOKEN": "b58b049c-b252-4334-9b06-312bb1a05542",
+              "npm_config_globalconfig": "/home/vinny/.npm-global/etc/npmrc",
+              "XCURSOR_SIZE": "18",
+              "EDITOR": "vi",
+              "XDG_SEAT": "seat0",
+              "PWD": "/home/vinny/Documents/ai/spACE",
+              "XDG_SESSION_DESKTOP": "Hyprland",
+              "LOGNAME": "vinny",
+              "QT_QPA_PLATFORMTHEME": "kde",
+              "XDG_SESSION_TYPE": "wayland",
+              "npm_config_init_module": "/home/vinny/.npm-init.js",
+              "_": "/home/vinny/Documents/ai/spACE/node_modules/.bin/playwright",
+              "KITTY_PUBLIC_KEY": "1:|EqLc1iMH_t^Dc)7-~^~>&frp3{oVSz+|dkHY<cE",
+              "OPENCODE_SESSION_ID": "ses_e43ade2e8ffe4IMgCqGbrjZ57b",
+              "MOTD_SHOWN": "pam",
+              "HOME": "/home/vinny",
+              "OPENCODE": "1",
+              "LANG": "en_US.UTF-8",
+              "LC_PAPER": "es_PY.UTF-8",
+              "_JAVA_AWT_WM_NONREPARENTING": "1",
+              "XDG_CURRENT_DESKTOP": "Hyprland",
+              "npm_package_version": "0.2.0",
+              "WAYLAND_DISPLAY": "wayland-1",
+              "KITTY_WINDOW_ID": "1",
+              "XDG_SEAT_PATH": "/org/freedesktop/DisplayManager/Seat0",
+              "INIT_CWD": "/home/vinny/Documents/ai/spACE",
+              "npm_lifecycle_script": "playwright test --config playwright.acceptance.config.ts",
+              "npm_config_npm_version": "11.19.1",
+              "XDG_SESSION_CLASS": "user",
+              "TERMINFO": "/usr/lib/kitty/terminfo",
+              "TERM": "xterm-256color",
+              "LC_IDENTIFICATION": "es_PY.UTF-8",
+              "npm_package_name": "space-flight-prototype",
+              "ZSH": "/home/vinny/.oh-my-zsh",
+              "npm_config_prefix": "/home/vinny/.npm-global",
+              "USER": "vinny",
+              "PAM_KWALLET5_LOGIN": "/run/user/1000/kwallet5.socket",
+              "HYPRLAND_INSTANCE_SIGNATURE": "efb50993780079460b0cbed1363e2166a2de1d9f_1794156065_76734075",
+              "DISPLAY": ":0",
+              "npm_lifecycle_event": "test:acceptance",
+              "SHLVL": "1",
+              "MOZ_ENABLE_WAYLAND": "0",
+              "LC_TELEPHONE": "es_PY.UTF-8",
+              "_P9K_SSH_TTY": "/dev/pts/0",
+              "LC_MEASUREMENT": "es_PY.UTF-8",
+              "XDG_VTNR": "2",
+              "XDG_SESSION_ID": "2",
+              "npm_config_user_agent": "npm/11.19.1 node/v26.10.0 linux x64 workspaces/false",
+              "npm_execpath": "/home/vinny/.local/node-v26.10.0-linux-x64/lib/node_modules/npm/bin/npm-cli.js",
+              "XDG_RUNTIME_DIR": "/run/user/1000",
+              "DEBUGINFOD_URLS": "https://debuginfod.archlinux.org ",
+              "npm_package_json": "/home/vinny/Documents/ai/spACE/package.json",
+              "LC_TIME": "es_PY.UTF-8",
+              "P9K_SSH": "0",
+              "XDG_DATA_DIRS": "/home/vinny/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share",
+              "npm_config_allow_scripts": "better-sqlite3,pgserve,@embedded-postgres/linux-x64,bun",
+              "npm_config_noproxy": "",
+              "PATH": "/home/vinny/Documents/ai/spACE/node_modules/.bin:/home/vinny/Documents/ai/node_modules/.bin:/home/vinny/Documents/node_modules/.bin:/home/vinny/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/home/vinny/.local/node-v26.10.0-linux-x64/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/home/vinny/.local/bin:/home/vinny/.npm-global/bin:/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl",
+              "npm_config_node_gyp": "/home/vinny/.local/node-v26.10.0-linux-x64/lib/node_modules/npm/node_modules/node-gyp/bin/node-gyp.js",
+              "OPENCODE_TERMINAL": "1",
+              "DBUS_SESSION_BUS_ADDRESS": "unix:path=/run/user/1000/bus",
+              "npm_config_global_prefix": "/home/vinny/.npm-global",
+              "MAIL": "/var/spool/mail/vinny",
+              "KITTY_INSTALLATION_DIR": "/usr/lib/kitty",
+              "npm_node_execpath": "/home/vinny/.local/node-v26.10.0-linux-x64/bin/node",
+              "LC_NUMERIC": "es_PY.UTF-8",
+              "OLDPWD": "/home/vinny/Documents/ai/spACE",
+              "HYPRCURSOR_SIZE": "18",
+              "BROWSERSLIST_IGNORE_OLD_DATA": "true"
+            },
+            "firefoxUserPrefs": {
+              "webgl.force-enabled": true,
+              "webgl.sanitize-unmasked-renderer": false
+            }
+          }
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "firefox-gpu"
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "docs/evidence/acceptance-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "default",
+    "updateSourceMethod": "patch",
+    "version": "1.65.0",
+    "workers": 1,
+    "webServer": {
+      "command": "npm run serve:https",
+      "url": "https://localhost:8443",
+      "ignoreHTTPSErrors": true,
+      "reuseExistingServer": true
+    }
+  },
+  "suites": [
+    {
+      "title": "acceptance/hardware.spec.ts",
+      "file": "acceptance/hardware.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "production HTTPS headers and missing-asset handling",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 960,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T18:59:37.278Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 801,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:22.713Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1241,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:09.638Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "7f6e29d2ba8878755ed2-b4c64b5eee8ca4972fc4",
+          "file": "acceptance/hardware.spec.ts",
+          "line": 6,
+          "column": 1
+        },
+        {
+          "title": "60-second real-GPU Medium combat benchmark at 1080p",
+          "ok": false,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 64506,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28",
+                    "location": {
+                      "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                      "column": 28,
+                      "line": 80
+                    },
+                    "snippet": " \u001b[90m 78 |\u001b[39m   expect(report\u001b[33m.\u001b[39msampleCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 79 |\u001b[39m   \u001b[90m// 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 80 |\u001b[39m   expect(report\u001b[33m.\u001b[39mmedianFps)\u001b[33m.\u001b[39mtoBeGreaterThanOrEqual(\u001b[35m60\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 81 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                        "column": 28,
+                        "line": 80
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m\n\n  78 |   expect(report.sampleCount).toBeGreaterThan(1000);\n  79 |   // 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\n> 80 |   expect(report.medianFps).toBeGreaterThanOrEqual(60);\n     |                            ^\n  81 | });\n  82 |\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T18:59:38.397Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-chrome-gpu/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-chrome-gpu/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                    "column": 28,
+                    "line": 80
+                  }
+                }
+              ],
+              "status": "unexpected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 64839,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28",
+                    "location": {
+                      "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                      "column": 28,
+                      "line": 80
+                    },
+                    "snippet": " \u001b[90m 78 |\u001b[39m   expect(report\u001b[33m.\u001b[39msampleCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 79 |\u001b[39m   \u001b[90m// 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 80 |\u001b[39m   expect(report\u001b[33m.\u001b[39mmedianFps)\u001b[33m.\u001b[39mtoBeGreaterThanOrEqual(\u001b[35m60\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 81 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                        "column": 28,
+                        "line": 80
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m59.9\u001b[39m\n\n  78 |   expect(report.sampleCount).toBeGreaterThan(1000);\n  79 |   // 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\n> 80 |   expect(report.medianFps).toBeGreaterThanOrEqual(60);\n     |                            ^\n  81 | });\n  82 |\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:23.676Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-edge-gpu/test-failed-1.png"
+                    },
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-edge-gpu/test-failed-2.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-edge-gpu/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                    "column": 28,
+                    "line": 80
+                  }
+                }
+              ],
+              "status": "unexpected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 4,
+                  "parallelIndex": 0,
+                  "status": "failed",
+                  "duration": 65243,
+                  "error": {
+                    "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m58.5\u001b[39m",
+                    "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m58.5\u001b[39m\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28",
+                    "location": {
+                      "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                      "column": 28,
+                      "line": 80
+                    },
+                    "snippet": " \u001b[90m 78 |\u001b[39m   expect(report\u001b[33m.\u001b[39msampleCount)\u001b[33m.\u001b[39mtoBeGreaterThan(\u001b[35m1000\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 79 |\u001b[39m   \u001b[90m// 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 80 |\u001b[39m   expect(report\u001b[33m.\u001b[39mmedianFps)\u001b[33m.\u001b[39mtoBeGreaterThanOrEqual(\u001b[35m60\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                            \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 81 |\u001b[39m })\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m"
+                  },
+                  "errors": [
+                    {
+                      "location": {
+                        "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                        "column": 28,
+                        "line": 80
+                      },
+                      "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: >= \u001b[32m60\u001b[39m\nReceived:    \u001b[31m58.5\u001b[39m\n\n  78 |   expect(report.sampleCount).toBeGreaterThan(1000);\n  79 |   // 60Hz displays can report 59.9 due to timer quantization. Report precision is 0.1 FPS.\n> 80 |   expect(report.medianFps).toBeGreaterThanOrEqual(60);\n     |                            ^\n  81 | });\n  82 |\n    at /home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts:80:28"
+                    }
+                  ],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:11.292Z",
+                  "annotations": [],
+                  "attachments": [
+                    {
+                      "name": "screenshot",
+                      "contentType": "image/png",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-firefox-gpu/test-failed-1.png"
+                    },
+                    {
+                      "name": "error-context",
+                      "contentType": "text/markdown",
+                      "path": "/home/vinny/Documents/ai/spACE/test-results/acceptance-hardware-60-sec-625ad-m-combat-benchmark-at-1080p-firefox-gpu/error-context.md"
+                    }
+                  ],
+                  "errorLocation": {
+                    "file": "/home/vinny/Documents/ai/spACE/tests/acceptance/hardware.spec.ts",
+                    "column": 28,
+                    "line": 80
+                  }
+                }
+              ],
+              "status": "unexpected"
+            }
+          ],
+          "id": "7f6e29d2ba8878755ed2-92be4863aaa5e7be62a6",
+          "file": "acceptance/hardware.spec.ts",
+          "line": 19,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "browser/mission.spec.ts",
+      "file": "browser/mission.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "First Light runs from briefing through tutorial, raid, reward, and reload without duplicate credits",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28744,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:00:43.245Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 28874,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:02:28.935Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 180000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 29918,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:17.055Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3e76f6d34c7bbce89541-642206ff4dbc33420b53",
+          "file": "browser/mission.spec.ts",
+          "line": 13,
+          "column": 1
+        },
+        {
+          "title": "Assist selection, restart, abandon, and storage-denied warning",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1202,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:12.131Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1346,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:02:58.012Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1893,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:47.410Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "3e76f6d34c7bbce89541-92885c7a7ec69cb6d3fb",
+          "file": "browser/mission.spec.ts",
+          "line": 75,
+          "column": 1
+        }
+      ]
+    },
+    {
+      "title": "browser/prototype.spec.ts",
+      "file": "browser/prototype.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "launch, lock a missile, fire, pause on focus loss, restart, and export timings",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4291,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:13.348Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4523,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:02:59.374Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 4796,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:49.317Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-59054f978db6a0df37c2",
+          "file": "browser/prototype.spec.ts",
+          "line": 3,
+          "column": 1
+        },
+        {
+          "title": "HUD and launch screen fit 1280x720",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 741,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:17.645Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 803,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:03.906Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 835,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:54.120Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-61748d0ec174add6b319",
+          "file": "browser/prototype.spec.ts",
+          "line": 38,
+          "column": 3
+        },
+        {
+          "title": "HUD and launch screen fit 1920x1080",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 984,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:18.393Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1080,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:04.717Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 984,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:54.963Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-272983cd737d8c94d248",
+          "file": "browser/prototype.spec.ts",
+          "line": 38,
+          "column": 3
+        },
+        {
+          "title": "quality setting changes the actual render resolution",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 480,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:19.385Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 511,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:05.809Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 663,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:55.955Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-a3e15f946d02c107c67e",
+          "file": "browser/prototype.spec.ts",
+          "line": 56,
+          "column": 1
+        },
+        {
+          "title": "mouse mode, sensitivity, and inversion are configurable and persistent",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 922,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:19.877Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1151,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:06.328Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1892,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:56.627Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-9ee988627ae86f9b421a",
+          "file": "browser/prototype.spec.ts",
+          "line": 63,
+          "column": 1
+        },
+        {
+          "title": "center-lower target arrow shows range and hold-C padlock tracks then releases",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "chrome-gpu",
+              "projectName": "chrome-gpu",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1602,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:01:20.804Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "edge-gpu",
+              "projectName": "edge-gpu",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1742,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:03:07.491Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            },
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox-gpu",
+              "projectName": "firefox-gpu",
+              "results": [
+                {
+                  "workerIndex": 5,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 1330,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-08T19:04:58.528Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "52497a362e085082fff7-a74c32223a9a6f913d1d",
+          "file": "browser/prototype.spec.ts",
+          "line": 91,
+          "column": 1
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-08T18:59:36.973Z",
+    "duration": 323170.85799999995,
+    "expected": 27,
+    "skipped": 0,
+    "unexpected": 3,
+    "flaky": 0
+  }
+}
