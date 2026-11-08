@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 const metal = new THREE.MeshStandardMaterial({ color: 0xb4c4c6, roughness: 0.7, metalness: 0.5, flatShading: true });
 const dark = new THREE.MeshStandardMaterial({ color: 0x263843, roughness: 0.8, metalness: 0.6, flatShading: true });
@@ -37,6 +38,25 @@ export function createShip(enemy = false) {
     flame.position.set(side * 3.2, 0, 7.8);
     flame.name = 'flame';
     ship.add(flame);
+  }
+  // Batch static pieces by material: keep the silhouette without a draw call per panel.
+  // Engine flames remain separate because the simulation animates their scale.
+  const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
+  for (const child of [...ship.children]) {
+    if (!(child instanceof THREE.Mesh) || child.name === 'flame' || Array.isArray(child.material)) continue;
+    child.updateMatrix();
+    const transformed = child.geometry.clone().applyMatrix4(child.matrix);
+    const batch = batches.get(child.material) || [];
+    batch.push(transformed);
+    batches.set(child.material, batch);
+    ship.remove(child);
+    child.geometry.dispose();
+  }
+  for (const [material, geometries] of batches) {
+    const merged = mergeGeometries(geometries);
+    if (!merged) throw new Error('Ship geometry batching failed');
+    ship.add(new THREE.Mesh(merged, material));
+    for (const geometry of geometries) geometry.dispose();
   }
   return ship;
 }

@@ -1,4 +1,4 @@
-import { defineConfig, devices } from '@playwright/test';
+import { defineConfig } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
@@ -24,9 +24,9 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   projects: [
-    { name: 'chrome-gpu', use: { ...devices['Desktop Chrome'], viewport: { width: 1920, height: 1080 }, launchOptions: { executablePath: browsers.chrome.executablePath, args: gpuArgs } } },
-    { name: 'edge-gpu', use: { ...devices['Desktop Edge'], viewport: { width: 1920, height: 1080 }, launchOptions: { executablePath: browsers.edge.executablePath, args: gpuArgs } } },
-    { name: 'firefox-gpu', use: { ...devices['Desktop Firefox'], viewport: { width: 1920, height: 1080 }, launchOptions: { env: { ...process.env, MOZ_ENABLE_WAYLAND: '0' }, firefoxUserPrefs: { 'webgl.force-enabled': true, 'webgl.sanitize-unmasked-renderer': false } } } },
+    { name: 'chrome-gpu', use: { browserName: 'chromium', launchOptions: { executablePath: browsers.chrome.executablePath, args: gpuArgs } } },
+    { name: 'edge-gpu', use: { browserName: 'chromium', launchOptions: { executablePath: browsers.edge.executablePath, args: gpuArgs } } },
+    { name: 'firefox-gpu', use: { browserName: 'firefox', launchOptions: { env: { ...process.env, MOZ_ENABLE_WAYLAND: '0' }, firefoxUserPrefs: { 'webgl.force-enabled': true, 'webgl.sanitize-unmasked-renderer': false } } } },
   ],
   webServer: process.env.ACCEPTANCE_URL ? undefined : {
     command: 'npm run serve:https',

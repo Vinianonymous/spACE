@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { cpus, totalmem, release } from 'node:os';
 import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 
 test('production HTTPS headers and missing-asset handling', async ({ request, page }) => {
   const response = await request.get('/');
@@ -63,6 +64,7 @@ test('60-second real-GPU Medium combat benchmark at 1080p', async ({ page, brows
     driver: execFileSync('glxinfo', ['-B'], { encoding: 'utf8' }),
     browser: await browser.version(),
     browserName,
+    buildIndexSha256: createHash('sha256').update(await readFile('dist/index.html')).digest('hex'),
     url: page.url(),
     renderer,
     hardwareAccelerated: true,
