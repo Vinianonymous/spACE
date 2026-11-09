@@ -1,6 +1,11 @@
 node_modules/
 dist/
 test-results/
+test-results-functional/
+test-results-campaign/
+test-results-campaign-assist/
+test-results-survival/
+test-results-survival-layout/
 playwright-report/
 .DS_Store
 .local/

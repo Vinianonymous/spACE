@@ -1,0 +1,87 @@
+{
+  "difficulty": "assist",
+  "ship": "Kestrel",
+  "loadout": "Default tier 1",
+  "results": [
+    {
+      "missionId": 1,
+      "title": "First Light",
+      "phases": [
+        "cannon",
+        "missile",
+        "defense",
+        "focus",
+        "raid"
+      ],
+      "actualSeconds": 23.791853333332806,
+      "targetMinutes": [
+        8,
+        10
+      ],
+      "withinDurationTarget": false,
+      "reward": 2000
+    },
+    {
+      "missionId": 2,
+      "title": "Broken Convoy",
+      "phases": [
+        "escort"
+      ],
+      "actualSeconds": 80.00020000000667,
+      "targetMinutes": [
+        10,
+        15
+      ],
+      "withinDurationTarget": false,
+      "reward": 1850
+    },
+    {
+      "missionId": 3,
+      "title": "Silent Geometry",
+      "phases": [
+        "salvage"
+      ],
+      "actualSeconds": 69.6745133333353,
+      "targetMinutes": [
+        10,
+        15
+      ],
+      "withinDurationTarget": false,
+      "reward": 2200
+    },
+    {
+      "missionId": 4,
+      "title": "Scavenger’s Crown",
+      "phases": [
+        "depot",
+        "intervention"
+      ],
+      "actualSeconds": 26.358253333332748,
+      "targetMinutes": [
+        12,
+        18
+      ],
+      "withinDurationTarget": false,
+      "reward": 2050
+    },
+    {
+      "missionId": 5,
+      "title": "Tetragon Rising",
+      "phases": [
+        "extraction",
+        "relays",
+        "engines",
+        "command"
+      ],
+      "actualSeconds": 74.26620666667046,
+      "targetMinutes": [
+        15,
+        20
+      ],
+      "withinDurationTarget": false,
+      "reward": 2500
+    }
+  ],
+  "errors": [],
+  "note": "Real input-driven functional playthrough, not a human pacing study. Duration misses are recorded rather than treated as passed."
+}

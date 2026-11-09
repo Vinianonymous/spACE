@@ -2,7 +2,7 @@
 
 **Build:** spACE v0.1.0  
 **Evidence date:** 2026-11-08  
-**Status:** Prototype implemented; **milestone acceptance on hold**. Public HTTPS deployment, branded Chrome/Edge checks, and the reference-hardware performance gate remain open. Do not advance the roadmap as though these gates have passed.
+**Status:** Prototype implemented; **strict performance acceptance on hold**. The user selected local HTTPS rather than public hosting. Chrome, Edge, and Firefox now run the production build over local HTTPS using the actual Intel GPU. The measured median-FPS gate remains below the literal ≥60 target; see the validation addendum below. Phase 2 was implemented at the user’s explicit request without claiming that this gate had passed.
 
 ## Decisions
 
@@ -32,7 +32,9 @@ The selected hardware class is a target, not evidence of a completed benchmark. 
 
 This prototype does not claim to implement mission 1 or later roadmap features. Hull is fixed at 100% because drones do not shoot back. Scenery is non-collidable. Missile ammunition is unlimited with a cooldown. There is no audio yet. These limitations are disclosed in the flight manual and README.
 
-## Verification evidence
+## Original prototype evidence (historical)
+
+This table describes the initial v0.1 capture. Current hardware/browser/deployment results supersede its outstanding items in the validation addendum below.
 
 | Check | Result |
 | --- | --- |
@@ -75,8 +77,26 @@ Sampling includes slow active frames, excludes paused time, and resets after cha
 4. Require median ≥60 FPS on the baseline. If it fails, reduce render resolution/effects or draw calls and repeat; do not mark step 1 complete based on software-renderer or different-hardware results.
 5. Have a human pilot assess pitch/yaw/roll consistency, aiming, camera motion, and readability at 720p and 1080p. Record issues and a signed-off go/no-go decision.
 
+## Updated validation — local HTTPS and real GPU
+
+The user explicitly selected **local HTTPS first**. `npm run serve:https` serves only `dist/` on loopback at **https://localhost:8443**, with a locally generated self-signed certificate. Browsers and automated test contexts must explicitly accept that certificate; no public CA trust or public endpoint is claimed. The server includes CSP, MIME/nosniff headers, method restrictions, and missing-asset handling. This resolves the deployment scope chosen by the user, not a public-hosting rollout.
+
+Chrome **157.0.8103.38**, Edge **157.0.4341.42**, and Firefox **159.0** successfully ran the complete gameplay regression over HTTPS. Chrome/Edge were downloaded from their official stable repositories and extracted locally with package hashes verified; no system browser installation was changed. Actual browser versions are recorded separately from Playwright device-profile user agents in the historical timing reports. The current acceptance configuration uses native user agents instead of device-profile overrides.
+
+Reference unit: **Intel Core Ultra 7 155U**, **16 GB nominal RAM (~15 GiB usable)**, **Intel Meteor Lake-P integrated graphics**, EndeavourOS/Linux 7.2.11, Mesa **26.2.5**, 1920×1080 browser viewport at DPR 1. WebGL renderer identities confirm Mesa Intel graphics rather than SwiftShader. Hardware discovery and renderer metadata are recorded in the environment JSON files.
+
+| Browser | Active capture | Median FPS | p95 frame time | Strict ≥60 result |
+| --- | --- | --- | --- | --- |
+| Chrome | 60.70 s | 59.9 | 16.70 ms | Not passed |
+| Edge | 60.68 s | 59.9 | 16.70 ms | Not passed |
+| Firefox | 60.62 s | 58.5 | 17.12 ms | Not passed |
+
+These are real-GPU, Medium, 1138×640 internal-resolution measurements, with continuous cannon fire, yaw, and a roll/boost interval. They are **not** the earlier software-rendered video capture. All three captures averaged approximately 60 frames per second across the entire capture, but average FPS is not a substitute for the PRD’s median criterion. This desktop reports physical display modes around 59.9 Hz; refresh caps and timer quantization affect strict comparisons. The assertions remain ≥60 and were not loosened to turn failures green.
+
+Evidence: `docs/evidence/{chrome,edge,firefox}-gpu-benchmark.json`, corresponding `*-environment.json` files, and `docs/evidence/acceptance-results.json`. The full run had **27 functional passes and three benchmark assertion failures**. Historical reports identify the build/time of their run; they do not certify later rendering changes. Static ship geometry was subsequently batched by material to reduce draw calls without changing the art, and functional regressions were rerun separately. Do not claim unmeasured post-change performance.
+
 ## Go / no-go assessment
 
 **Go for further prototype evaluation:** The web stack supports the required flight, targeting, missile guidance, procedural scene, pixelated rendering, and independent readable HUD. Both automated browsers can complete cannon/missile actions without runtime errors. The production payload is far below the PRD’s 30 MB compressed budget.
 
-**No-go for declaring step 1 complete or starting content expansion as a passed milestone:** No public HTTPS endpoint has been provisioned, branded Chrome/Edge remain unverified, the required reference-hardware performance result is missing, and human flight-feel validation is outstanding. The software-renderer result is explicitly below target and cannot be used to certify GPU performance. Resolve these gaps before accepting the gate.
+**No-go for declaring the strict performance gate passed:** Real-GPU measurements now exist, branded-browser functionality and the user-selected local HTTPS deployment are verified, and the gameplay capture/flight assessment is recorded. However, the literal median ≥60 FPS criterion has not passed. A higher-refresh, controlled timing run and post-batching benchmark are needed to distinguish display/timer ceilings from render headroom without redefining the target. Human handling feedback remains useful and is explicitly required by phase 2’s onboarding gate.

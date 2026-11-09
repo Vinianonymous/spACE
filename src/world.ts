@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import type { ShipId } from './catalog';
+import type { Faction, TargetKind } from './campaign';
 
 const metal = new THREE.MeshStandardMaterial({ color: 0xb4c4c6, roughness: 0.7, metalness: 0.5, flatShading: true });
 const dark = new THREE.MeshStandardMaterial({ color: 0x263843, roughness: 0.8, metalness: 0.6, flatShading: true });
@@ -13,9 +15,10 @@ function box(parent: THREE.Group, size: number[], position: number[], material: 
   return mesh;
 }
 
-export function createShip(enemy = false) {
+export function createShip(enemy = false, variant: ShipId = 'kestrel') {
   const ship = new THREE.Group();
-  const shell = enemy ? new THREE.MeshStandardMaterial({ color: 0x934f3c, roughness: 0.85, flatShading: true }) : metal;
+  const colors = { kestrel: 0xb4c4c6, viper: 0x8bb0bd, bastion: 0xa9a18b, specter: 0x777c9c, peregrine: 0x91b5a2, paladin: 0xdbceb6 };
+  const shell = enemy ? new THREE.MeshStandardMaterial({ color: 0x934f3c, roughness: 0.85, flatShading: true }) : variant === 'kestrel' ? metal : new THREE.MeshStandardMaterial({ color: colors[variant], roughness: 0.7, metalness: 0.5, flatShading: true });
   box(ship, [2.8, 1.6, 8], [0, 0, 0], shell);
   const nose = new THREE.Mesh(new THREE.ConeGeometry(1.55, 5, 4), shell);
   nose.rotation.x = -Math.PI / 2;
@@ -39,6 +42,23 @@ export function createShip(enemy = false) {
     flame.name = 'flame';
     ship.add(flame);
   }
+  if (!enemy) {
+    if (variant === 'viper') {
+      for (const child of ship.children) { child.position.x *= 0.72; child.position.z *= 1.2; }
+      box(ship, [0.5, 2.5, 5], [0, 2, 3], shell);
+    } else if (variant === 'bastion') {
+      box(ship, [6, 2.6, 9], [0, -0.6, 0], shell);
+      for (const side of [-1, 1]) { box(ship, [3.4, 2.7, 7], [side * 6, -0.6, 2], dark); box(ship, [1, 1, 8], [side * 6, 0, -3], shell); }
+    } else if (variant === 'specter') {
+      for (const side of [-1, 1]) { box(ship, [1.2, 0.7, 12], [side * 5.5, 0.6, -1], shell); box(ship, [3.8, 0.25, 2], [side * 3.7, -0.1, -4], dark); }
+    } else if (variant === 'peregrine') {
+      for (const side of [-1, 1]) { const blade = box(ship, [7, 0.3, 2.5], [side * 6, 1.4, 1], shell); blade.rotation.y = side * 0.55; blade.rotation.z = side * 0.2; }
+    } else if (variant === 'paladin') {
+      for (const side of [-1, 1]) { box(ship, [5.5, 0.45, 2], [side * 3.3, 0.2, -4], shell); box(ship, [1.7, 1.2, 4], [side * 7, 0.3, 3], dark); }
+      box(ship, [2, 1.2, 4], [0, -1.1, 3], shell);
+    }
+  }
+  ship.name = enemy ? 'trusan' : variant;
   // Batch static pieces by material: keep the silhouette without a draw call per panel.
   // Engine flames remain separate because the simulation animates their scale.
   const batches = new Map<THREE.Material, THREE.BufferGeometry[]>();
@@ -59,6 +79,84 @@ export function createShip(enemy = false) {
     for (const geometry of geometries) geometry.dispose();
   }
   return ship;
+}
+
+const aiMetal = new THREE.MeshStandardMaterial({ color: 0x495468, emissive: 0x09243a, metalness: 0.7, roughness: 0.5, flatShading: true });
+const aiGlow = new THREE.MeshBasicMaterial({ color: 0x88cfff });
+const vextra = new THREE.MeshStandardMaterial({ color: 0xbaff80, emissive: 0x497b29, roughness: 0.4, flatShading: true });
+const pirateMetal = new THREE.MeshStandardMaterial({ color: 0x8d5140, roughness: 0.9, flatShading: true });
+
+export function createCommandVessel() {
+  const group = new THREE.Group();
+  box(group, [115, 32, 270], [0, 0, 0], aiMetal);
+  box(group, [48, 65, 160], [0, 15, -10], dark);
+  for (const side of [-1, 1]) {
+    const wing = box(group, [100, 10, 150], [side * 100, -5, 20], aiMetal);
+    wing.rotation.y = side * 0.4;
+    box(group, [10, 18, 190], [side * 75, 6, 10], aiGlow);
+    box(group, [38, 36, 40], [side * 90, 0, 145], dark);
+    box(group, [28, 25, 4], [side * 90, 0, 166], aiGlow);
+  }
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(145, 3, 6, 40), aiGlow);
+  ring.rotation.x = Math.PI / 2;
+  group.add(ring);
+  return group;
+}
+
+export function createActor(faction: Faction, kind: TargetKind) {
+  if (kind === 'boss') { const vessel = createCommandVessel(); vessel.scale.setScalar(0.45); return vessel; }
+  if (faction === 'trusan' && (kind === 'fighter' || kind === 'heavy')) return createShip(true);
+  const group = new THREE.Group();
+  if (kind === 'fighter' || kind === 'heavy') {
+    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'heavy' ? 4 : 2.8), aiMetal));
+    for (let i = 0; i < 4; i++) {
+      const angle = i * Math.PI / 2;
+      const fin = box(group, [7, 0.4, 3.5], [Math.cos(angle) * 4, Math.sin(angle) * 4, 0], aiMetal);
+      fin.rotation.z = angle;
+    }
+    box(group, [1.2, 1.2, 11], [0, 0, 0], aiGlow);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'heavy' ? 6 : 4, 0.18, 4, 12), aiGlow);
+    group.add(ring);
+  } else if (kind === 'turret') {
+    box(group, [35, 10, 35], [0, -7, 0], pirateMetal);
+    box(group, [15, 14, 18], [0, 4, 0], dark);
+    box(group, [5, 5, 32], [0, 7, -18], pirateMetal);
+  } else if (kind === 'cache') {
+    box(group, [36, 24, 28], [0, 0, 0], pirateMetal);
+    for (const side of [-1, 1]) box(group, [3, 26, 30], [side * 11, 0, 0], vextra);
+  } else {
+    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'core' ? 23 : 14), faction === 'naurae' ? aiGlow : vextra));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'core' ? 32 : 22, 2, 6, 16), faction === 'naurae' ? aiMetal : pirateMetal);
+    ring.rotation.x = kind === 'engine' ? 0 : Math.PI / 2;
+    group.add(ring);
+  }
+  return group;
+}
+
+export function createObjective(kind: 'convoy' | 'beacon' | 'depot' | 'extraction') {
+  const group = new THREE.Group();
+  if (kind === 'convoy') {
+    box(group, [18, 14, 85], [0, 0, 0], metal);
+    for (const side of [-1, 1]) {
+      box(group, [18, 18, 55], [side * 20, 0, 7], dark);
+      box(group, [13, 13, 3], [side * 20, 0, 36], engine);
+      box(group, [22, 3, 40], [side * 20, 10, 0], vextra);
+    }
+  } else if (kind === 'beacon') {
+    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(35), vextra));
+    const perimeter = new THREE.Mesh(new THREE.TorusGeometry(650, 1.5, 4, 80), new THREE.MeshBasicMaterial({ color: 0x6bafc3, transparent: true, opacity: 0.45 }));
+    perimeter.rotation.x = Math.PI / 2; group.add(perimeter);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(65, 2, 4, 24), aiGlow); group.add(ring);
+  } else {
+    const material = kind === 'depot' ? pirateMetal : metal;
+    box(group, [240, 35, 140], [0, -25, 0], material);
+    box(group, [60, 100, 65], [0, 20, 0], dark);
+    for (const side of [-1, 1]) {
+      box(group, [130, 6, 90], [side * 190, -10, 0], kind === 'depot' ? dark : glass);
+      box(group, [10, 40, 10], [side * 110, 0, 30], vextra);
+    }
+  }
+  return group;
 }
 
 function random(seed: number) {

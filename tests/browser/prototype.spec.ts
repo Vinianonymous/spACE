@@ -53,6 +53,30 @@ for (const viewport of [{ width: 1280, height: 720 }, { width: 1920, height: 108
   });
 }
 
+test('flight HUD is only visible during active flight, not menus or pause', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('body')).not.toHaveClass(/hud-visible/);
+  for (const selector of ['.mission-panel', '.telemetry', '.reticle', '.heading-scale', '.bottom-hud', '.statusbar', '#target-guide', '#threat-warning']) {
+    await expect(page.locator(selector)).toBeHidden();
+  }
+  await page.locator('#exercise').click();
+  await expect(page.locator('body')).toHaveClass(/hud-visible/);
+  for (const selector of ['.mission-panel', '.telemetry', '.reticle', '.heading-scale', '.bottom-hud', '.statusbar', '#target-guide']) {
+    await expect(page.locator(selector)).toBeVisible();
+  }
+  await page.evaluate(() => window.dispatchEvent(new Event('blur')));
+  await expect(page.locator('#pause-panel')).toBeVisible();
+  await expect(page.locator('body')).not.toHaveClass(/hud-visible/);
+  await expect(page.locator('.telemetry')).toBeHidden();
+  await expect(page.locator('.bottom-hud')).toBeHidden();
+  // Escape is ignored for 150 ms after pausing to avoid the key that exits pointer lock
+  // immediately re-entering flight. A human always takes longer than this.
+  await page.waitForTimeout(220);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('body')).toHaveClass(/hud-visible/);
+  await expect(page.locator('.telemetry')).toBeVisible();
+});
+
 test('quality setting changes the actual render resolution', async ({ page }) => {
   await page.goto('/');
   await page.locator('#help-button').click();
@@ -76,6 +100,7 @@ test('mouse mode, sensitivity, and inversion are configurable and persistent', a
   await page.locator('#close-help').click();
   await page.locator('#exercise').click();
   await expect.poll(() => page.evaluate(() => document.pointerLockElement?.id)).toBe('viewport');
+  await page.waitForTimeout(150); // Capture-warp suppression window is not pilot input.
   const before = await page.locator('#heading').textContent();
   // Exercise relative deltas without changing cursor screen coordinates.
   for (let i = 0; i < 6; i++) {
@@ -102,6 +127,8 @@ test('center-lower target arrow shows range and hold-C padlock tracks then relea
   await page.keyboard.down('KeyC');
   await expect(page.locator('#padlock-status')).toBeVisible();
   await expect(page.locator('body')).toHaveClass(/padlock-view/);
+  await expect(page.locator('#guide-caption')).toHaveText('SHIP ATTITUDE / TARGET');
+  await expect(page.locator('#guide-bearing')).toHaveText(/P .* · Y .* · B .*/);
   // The selected target is pulled to the center while the player retains flight control.
   await expect.poll(async () => {
     const marker = await page.locator('#target-marker').boundingBox();
@@ -110,4 +137,47 @@ test('center-lower target arrow shows range and hold-C padlock tracks then relea
   await page.keyboard.up('KeyC');
   await expect(page.locator('#padlock-status')).toBeHidden();
   await expect(page.locator('body')).not.toHaveClass(/padlock-view/);
+  await expect(page.locator('#guide-caption')).toHaveText('DRONE 02');
+});
+
+test('mouse yoke persists pitch/roll deflection until opposite motion or recentering', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#help-button').click();
+  await page.locator('#mouse-mode').selectOption('yoke');
+  await page.locator('#quality').selectOption('low');
+  await expect(page.locator('#mouse-description')).toContainText('HOLD roll');
+  await page.reload();
+  await page.locator('#help-button').click();
+  await expect(page.locator('#mouse-mode')).toHaveValue('yoke');
+  await page.locator('#close-help').click();
+  await page.locator('#launch').click();
+  await page.locator('#launch-mission').click();
+  await expect.poll(() => page.evaluate(() => document.pointerLockElement?.id)).toBe('viewport');
+  await page.waitForTimeout(160);
+  await expect(page.locator('#mouse-yoke')).toBeVisible();
+  await page.evaluate(() => document.dispatchEvent(new MouseEvent('mousemove', { movementX: 80, movementY: -50 })));
+  await expect.poll(async () => Number(await page.locator('#mouse-yoke').getAttribute('data-roll'))).toBeCloseTo(0.32, 5);
+  await expect.poll(async () => Number(await page.locator('#mouse-yoke').getAttribute('data-pitch'))).toBeCloseTo(0.2, 5);
+  await expect(page.locator('#objective')).toContainText('✓ roll');
+  await expect(page.locator('#objective')).toContainText('✓ pitch');
+  await expect(page.locator('#objective')).toContainText('□ yaw');
+  await page.waitForTimeout(400);
+  expect(Number(await page.locator('#mouse-yoke').getAttribute('data-roll'))).toBeCloseTo(0.32, 5);
+  expect(Number(await page.locator('#mouse-yoke').getAttribute('data-pitch'))).toBeCloseTo(0.2, 5);
+  await page.evaluate(() => document.dispatchEvent(new MouseEvent('mousemove', { movementX: -40, movementY: 25 })));
+  await expect.poll(async () => Number(await page.locator('#mouse-yoke').getAttribute('data-roll'))).toBeCloseTo(0.16, 5);
+  await expect.poll(async () => Number(await page.locator('#mouse-yoke').getAttribute('data-pitch'))).toBeCloseTo(0.1, 5);
+  await page.keyboard.press('KeyZ');
+  await expect(page.locator('#mouse-yoke')).toHaveAttribute('data-roll', '0');
+  await expect(page.locator('#mouse-yoke')).toHaveAttribute('data-pitch', '0');
+  await page.keyboard.down('KeyA');
+  await expect(page.locator('#objective')).toContainText('✓ yaw');
+  await page.keyboard.up('KeyA');
+  await page.evaluate(() => document.dispatchEvent(new MouseEvent('mousemove', { movementX: 50 })));
+  await expect.poll(async () => Number(await page.locator('#mouse-yoke').getAttribute('data-roll'))).toBeGreaterThan(0);
+  await page.keyboard.press('KeyH');
+  await page.locator('#close-help').click();
+  await page.locator('#resume').click();
+  await expect(page.locator('#mouse-yoke')).toHaveAttribute('data-roll', '0');
+  await expect(page.locator('#mouse-yoke')).toHaveAttribute('data-pitch', '0');
 });

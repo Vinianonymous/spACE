@@ -34,7 +34,7 @@ Mission failure is Lion’s hull reaching zero. Restart replenishes shields, hul
 
 ### Relative mouse flight
 
-The default uses Pointer Lock and relative mouse-motion deltas for pitch/yaw, not the cursor’s screen destination. Deltas are consumed once per rendered frame, then applied consistently through simulation substeps. Brief smoothing removes jitter and decays to neutral when motion stops. The old screen-position steering remains available in the manual, with sensitivity and pitch inversion. Preferences are validated and persisted separately from progression.
+The default uses Pointer Lock and relative mouse-motion deltas for pitch/yaw, not the cursor’s screen destination. Deltas are consumed once per rendered frame, then applied consistently through simulation substeps. Brief smoothing removes jitter and decays to neutral when motion stops. The first 120 ms after cursor capture ignore browser/OS warp deltas so clicking Resume/Restart cannot silently yaw the ship. The old screen-position steering remains available in the manual, with sensitivity and pitch inversion. Preferences are validated and persisted separately from progression.
 
 ### Player-centered padlock
 
@@ -56,6 +56,8 @@ Validated previous saves become a backup before replacement. A corrupt primary c
 
 ## Verification
 
+Current unit suite: **40 tests pass**. The production HTTPS suite completed with **27 functional passes** across branded Chrome/Edge and Firefox; its three strict ≥60-FPS assertions did not pass. Performance remains a separately documented open gate in [STEP-1.md](STEP-1.md), not a claimed pass for this slice.
+
 - Flight, locking, collision, mouse input, camera geometry, 3D guide orientation, resources, mission checks, and save integrity have unit coverage.
 - Camera tests project Lion into clip space on every frame of a 180° padlock transition, including targets above/below, and assert the ship remains in view and the boom remains outside the ship.
 - Browser tests run the actual mission from briefing through all lessons and the raid using ordinary keyboard input and HUD feedback. They do not inject kills, mission state, damage, credits, or completion.
@@ -65,6 +67,21 @@ Validated previous saves become a backup before replacement. A corrupt primary c
 - Save tests cover replay rewards, duplicate completion, malformed saves, backup preservation, storage denial, quota failure, and invalid balances/rewards.
 
 Reproduce with `npm test`, `npm run build`, and `npm run test:browser`. The production HTTPS/branded-browser suite is `npm run test:acceptance`; its machine-readable report lives in `docs/evidence/acceptance-results.json` when run. Historical failed runs must not be interpreted as passing evidence.
+
+`npm run test:acceptance:functional` explicitly runs only the functional subset and writes `docs/evidence/functional-results.json`, leaving the full run’s failed benchmark assertions visible in its own report. It is not a performance acceptance command.
+
+### Visual evidence
+
+- [Updated launch screen](evidence/phase-2/launch-1080.png)
+- [Player-visible padlock and 3D attitude arrow](evidence/phase-2/padlock-1080.png)
+- [720p flight HUD and 3D direction arrow](evidence/phase-2/flight-720.png)
+- [Updated gameplay recording](evidence/phase-2/gameplay.webm)
+- [First Light briefing](evidence/phase-2/mission-briefing.png)
+- [Tetragon formation and training](evidence/phase-2/tetragon-training.png)
+- [Live Trusan incursion](evidence/phase-2/trusan-incursion.png)
+- [Mission-complete debrief and credit reward](evidence/phase-2/mission-debrief.png)
+
+These visual captures use software rendering with video recording, so their FPS counters do not represent the real-GPU benchmark.
 
 ## Scope and remaining acceptance
 

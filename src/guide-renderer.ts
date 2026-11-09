@@ -14,6 +14,7 @@ export class GuideRenderer {
   private camera = new THREE.PerspectiveCamera(40, 1, 0.1, 30);
   private arrow = new THREE.Group();
   private material = new THREE.MeshStandardMaterial({ color: 0xbaff80, roughness: 0.35, metalness: 0.25, flatShading: true });
+  private size = new THREE.Vector2();
 
   constructor() {
     this.camera.position.set(0, 0, 6.3);
@@ -39,10 +40,12 @@ export class GuideRenderer {
   }
 
   render(renderer: THREE.WebGLRenderer, bounds: DOMRect, rotation: THREE.Quaternion, color: string) {
-    const size = renderer.getSize(new THREE.Vector2());
+    const size = this.size;
+    renderer.getSize(size);
     const x = bounds.left / innerWidth * size.x;
     const y = (innerHeight - bounds.bottom) / innerHeight * size.y;
     const width = bounds.width / innerWidth * size.x, height = bounds.height / innerHeight * size.y;
+    if (width <= 0 || height <= 0) return;
     this.arrow.quaternion.copy(rotation);
     this.material.color.setStyle(color);
     renderer.autoClear = false;

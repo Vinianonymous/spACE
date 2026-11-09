@@ -33,6 +33,7 @@ Ace Combat 7 is a reference for pacing, mission presentation, and arcade combat�
 ### v1.0 release scope
 
 - A complete single-player campaign of five replayable missions.
+- Wave Survival with escalating enemies, run-only skill tokens, and summoning bosses every tenth wave (requested scope addition; see [rules](docs/SURVIVAL.md)).
 - Three factions with distinct visual identities and battlefield behavior.
 - Six player-flyable ships: one starter and five credit-purchased alternatives.
 - A hangar supporting ship purchases, part swapping, and part upgrades.
@@ -60,8 +61,8 @@ For v1.0, this galactic conflict is presented through a limited operational thea
 | Faction | Identity and motivation | Battlefield expression |
 | --- | --- | --- |
 | **Exavius** | A nation based on Mars, the last remnant of civilized mankind. It fights to preserve humanity and secure the Vextra needed for survival. | Disciplined formations, coordinated escorts, industrial-military silhouettes, and dependable multirole ships. |
-| **Trusan** | A society of space pirates: often disorganized, but united by an unknown common leader. Its raiders fight for salvage, power, and access to Vextra. | Aggressive ambushes, scavenged hulls, opportunistic attacks, and uneven coordination. |
-| **Naurae** | An AI society led by the rogue superintelligence **Nauralis**. It seeks control of Vextra and galactic infrastructure. | Coordinated drone groups, geometric ships, machine precision, and synchronized attacks. |
+| **Trusan** | A society of space pirates: often disorganized, but united by an unknown common leader. Its raiders fight for salvage, power, and access to Vextra. | Aggressive ambushes, scavenged hulls, opportunistic attacks, and uneven coordination. Damaged raiders overclock, lock onto a target, and dive into a proximity detonation. |
+| **Naurae** | An AI society led by the rogue superintelligence **Nauralis**. It seeks control of Vextra and galactic infrastructure. | Coordinated drone groups, geometric ships, machine precision, and synchronized attacks. Ships charge EMP blasts that strip shields and lock systems, and damaged units teleport to new firing solutions. |
 
 ### Protagonist and squadron
 
@@ -264,6 +265,8 @@ Reference hardware must be recorded before performance acceptance: a laptop with
 
 Record preset, internal resolution, browser version, hardware, and test scenario with performance results. Lower-fidelity effects are preferable to obscured targets or unstable controls.
 
+Implementation status: the browser build now includes opt-in adaptive resolution (640p→480p), a throttled guide viewport with cached bounds, reduced per-frame allocations, and skipped HUD work outside flight. Prior reference-machine medians were 59.9 FPS in Chrome and Edge and 58.5 FPS in Firefox, so the ≥60 FPS gate remains open. Desktop packaging is documented as an optional distribution path in [DESKTOP.md](docs/DESKTOP.md); it is not implemented and would not by itself guarantee a higher frame rate.
+
 ## 10. Success criteria and validation
 
 These are release-validation targets, not claims about an existing audience. Use at least eight first-time desktop playtesters for the onboarding study; report raw counts as well as percentages.
@@ -289,7 +292,7 @@ Each step is complete only when its checklist passes and its evidence is recorde
 **Deliverable:** A deployed, playable flight-and-combat prototype in a representative pixelated 3D scene.
 
 - [x] Select and document the engine, controls, pixel-rendering method, and reference test hardware. See [step-1 evidence](docs/STEP-1.md); reference-hardware measurements remain pending.
-- [ ] Deploy an HTTPS build that opens in Chrome, Edge, and Firefox without installation.
+- [x] Deploy an HTTPS build that opens in Chrome, Edge, and Firefox without installation. User-selected local HTTPS at `https://localhost:8443`; self-signed certificate exception is required. See [validation scope](docs/STEP-1.md).
 - [x] Implement pitch, yaw, roll, throttle, boost, chase camera, and focus-loss pause.
 - [x] Let the player destroy a moving target with a primary weapon and a locked missile.
 - [x] Demonstrate the HUD remains readable at both 1280×720 and 1920×1080 display resolutions. Screenshots and automated layout checks recorded in step-1 evidence.
@@ -312,23 +315,23 @@ Each step is complete only when its checklist passes and its evidence is recorde
 
 **Deliverable:** A functional hangar and persistent progression economy.
 
-- [ ] Implement all six flyable ships with distinct handling and the starter granted on a new save.
-- [ ] Make all five alternative ships purchasable with credits and immediately launchable with default loadouts.
-- [ ] Deliver ten parts across five slots, with three tiers per part, compatibility rules, and fitting limits.
-- [ ] Show accurate stat comparisons and preserve each ship’s last valid loadout after reload.
-- [ ] Verify the first mission funds an upgrade and an alternative ship is affordable after two to three successful missions.
-- [ ] Pass automated purchase, insufficient-funds, duplicate-reward, replay-reward, and upgrade-persistence tests.
-- [ ] Pass save reload, export/import, invalid-save, and unavailable-storage tests without silently resetting progression.
+- [x] Implement all six flyable ships with distinct handling and the starter granted on a new save.
+- [x] Make all five alternative ships purchasable with credits and immediately launchable with default loadouts.
+- [x] Deliver ten parts across five slots, with three tiers per part, compatibility rules, and fitting limits.
+- [x] Show accurate stat comparisons and preserve each ship’s last valid loadout after reload.
+- [x] Verify the first mission funds an upgrade and an alternative ship is affordable after two to three successful missions.
+- [x] Pass automated purchase, insufficient-funds, duplicate-reward, replay-reward, and upgrade-persistence tests.
+- [x] Pass save reload, export/import, invalid-save, and unavailable-storage tests without silently resetting progression. See [phase-3 evidence](docs/STEP-3.md).
 
 ### Step 4 — Finish and balance the campaign
 
 **Deliverable:** All five missions form a complete, replayable campaign.
 
-- [ ] Implement missions 2–5 with their specified objectives, briefings, debriefings, and radio dialogue.
-- [ ] Include all three factions, distinguish Trusan and Naurae combat behavior, and identify Nauralis in the story.
-- [ ] Complete the final phased encounter and provide a campaign ending that resolves the local Vextra operation.
-- [ ] Verify sequential unlocking and replay access for every completed mission.
-- [ ] Complete the full campaign on Standard using the starter ship’s default loadout and separately verify Assist difficulty.
+- [x] Implement missions 2–5 with their specified objectives, briefings, debriefings, and radio dialogue. Prototype objective timings; see [phase-4 evidence](docs/STEP-4.md).
+- [x] Include all three factions, distinguish Trusan and Naurae combat behavior, and identify Nauralis in the story. Trusan overclock/detonation and Naurae EMP/teleport behavior are implemented and unit-tested.
+- [x] Complete the final phased encounter and provide a campaign ending that resolves the local Vextra operation.
+- [x] Verify sequential unlocking and replay access for every completed mission.
+- [x] Complete the full campaign on Standard using the starter ship’s default loadout and separately verify Assist difficulty. Input-driven runs recorded in [phase-4 evidence](docs/STEP-4.md); pacing acceptance remains open.
 - [ ] Playtest every ship and each part option in combat; fix dominant builds that remove meaningful tradeoffs.
 - [ ] Check mission durations against the target ranges and eliminate repeatable objective stalls or unwinnable states.
 

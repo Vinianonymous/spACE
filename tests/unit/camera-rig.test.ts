@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PerspectiveCamera, Quaternion, Vector3 } from 'three';
+import { Euler, PerspectiveCamera, Quaternion, Vector3 } from 'three';
 import { CameraRig } from '../../src/camera-rig';
 import { guideRotation } from '../../src/guide-renderer';
 import { FORWARD } from '../../src/flight';
@@ -30,6 +30,15 @@ describe('player-centered padlock orbit', () => {
     for (let i = 0; i < 120; i++) rig.update(camera, new Vector3(), new Quaternion(), undefined, 1 / 60);
     expect(camera.position.x).toBeCloseTo(0, 2);
     expect(camera.position.z).toBeCloseTo(43, 2);
+  });
+  it('does not cancel ship bank in the stabilized target-facing view', () => {
+    const rig = new CameraRig();
+    const camera = new PerspectiveCamera();
+    const banked = new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), Math.PI / 2);
+    const target = new Vector3(0, 0, -1000);
+    rig.update(camera, new Vector3(), banked, target, 0);
+    const attitude = new Euler().setFromQuaternion(guideRotation(new Vector3(), target, camera.quaternion, banked, true));
+    expect(Math.abs(attitude.z)).toBeGreaterThan(1.4);
   });
 });
 

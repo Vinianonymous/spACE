@@ -1,0 +1,15 @@
+Phases of the campaign (Defines the set of missions and scope)
+Phase 1: Current, alreeady developed
+
+Phase 2: 400 Miles from home
+Missions:
+	1. Long March: Defend an Exavius Fleet (4 motherships) along 3 other squads against Naurae Ships, trusan rogues  and rogue asteroids. 
+		The fleet should arrive in pluto. However, Naurae Employs an secret laser ship that must be found by the player before it's cryogenic tanks are fired up, and the laser is rendered operative and fires against the fleet.
+
+	2. Lion's Roar: Run a strike mission against a Naurae base set on uranus rings. The asteroid belt serves as the base for AntiShip installations, and they have a 'core' cube,
+	whose role is deploying more and more ships and weaponry against Lion's squad. The base should have SAMs and AA turrents, also involve transpport ships taht cant shoot.
+
+	3. Supernova: Tetragon scrambles to intercept an Trusan Squad that has one of Trusan's leaders, named IronFist. The reason why is because He has authentication privileges to an superweapon named
+	The first scourge.  Irofist wants to use that superweapon to destroy mars, where Exavius sits. Lion has to use an special equipment named hypr to intercept the squad, since they were orbiting mars and needed to go to the asteroid belt.
+	
+	Generate 3 other missions with similar tropes.

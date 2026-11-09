@@ -1,6 +1,6 @@
 {
   "name": "space-flight-prototype",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,9 +9,11 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "vitest run",
     "test:browser": "playwright test",
+    "test:campaign": "playwright test --config playwright.campaign.config.ts",
     "serve:https": "node scripts/serve-https.mjs",
     "validation:browsers": "node scripts/install-validation-browsers.mjs",
-    "test:acceptance": "playwright test --config playwright.acceptance.config.ts"
+    "test:acceptance": "playwright test --config playwright.acceptance.config.ts",
+    "test:acceptance:functional": "SPACE_ACCEPTANCE_REPORT=docs/evidence/functional-results.json playwright test --config playwright.acceptance.config.ts --grep-invert 60-second --output=test-results-functional"
   },
   "dependencies": {
     "three": "^0.180.0"

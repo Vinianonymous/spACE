@@ -1,4 +1,5 @@
 import { MathUtils, Quaternion, Vector3 } from 'three';
+import { DEFAULT_STATS, type BuildStats } from './catalog';
 
 export const FORWARD = new Vector3(0, 0, -1);
 export const MAX_LOCK_RANGE = 1600;
@@ -21,16 +22,18 @@ export class Flight {
   boost = 100;
   boosting = false;
 
+  constructor(public stats: BuildStats = DEFAULT_STATS) { this.boost = stats.boostCapacity; }
+
   update(input: FlightInput, dt: number) {
     this.throttle = MathUtils.clamp(this.throttle + input.throttle * dt * 0.35, 0, 1);
     this.boosting = input.boost && this.boost > 2;
-    this.boost = MathUtils.clamp(this.boost + (this.boosting ? -26 : 14) * dt, 0, 100);
-    const targetSpeed = this.boosting ? 260 : MathUtils.lerp(40, 150, this.throttle);
-    this.speed = MathUtils.damp(this.speed, targetSpeed, 2, dt);
+    this.boost = MathUtils.clamp(this.boost + (this.boosting ? -26 : 14) * dt, 0, this.stats.boostCapacity);
+    const targetSpeed = this.boosting ? this.stats.boostSpeed : MathUtils.lerp(40, this.stats.topSpeed, this.throttle);
+    this.speed = MathUtils.damp(this.speed, targetSpeed, this.stats.acceleration, dt);
     // Local-axis rotation keeps pitch and yaw consistent after rolling.
-    const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -input.yaw * dt * 0.85);
-    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), input.pitch * dt * 0.85));
-    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -input.roll * dt * 1.65));
+    const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -input.yaw * dt * this.stats.turnRate);
+    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), input.pitch * dt * this.stats.turnRate));
+    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -input.roll * dt * this.stats.rollRate));
     this.rotation.multiply(delta).normalize();
     this.position.addScaledVector(FORWARD.clone().applyQuaternion(this.rotation), this.speed * dt);
     if (this.position.length() > 5500) {
@@ -41,11 +44,11 @@ export class Flight {
   }
 }
 
-export function canLock(position: Vector3, rotation: Quaternion, target: Vector3) {
+export function canLock(position: Vector3, rotation: Quaternion, target: Vector3, coneDegrees = 18) {
   const offset = target.clone().sub(position);
   const distance = offset.length();
   return distance > 0 && distance <= MAX_LOCK_RANGE &&
-    FORWARD.clone().applyQuaternion(rotation).dot(offset.normalize()) >= LOCK_CONE;
+    FORWARD.clone().applyQuaternion(rotation).dot(offset.normalize()) >= Math.cos(MathUtils.degToRad(coneDegrees));
 }
 
 export function lockProgress(progress: number, eligible: boolean, dt: number) {

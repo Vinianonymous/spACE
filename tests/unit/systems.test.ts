@@ -61,4 +61,30 @@ describe('combat systems', () => {
     systems.update(30);
     expect(systems.focus()).toBe(true);
   });
+  it('a Naurae EMP strips shields without hull damage and locks weapons until the timer expires', () => {
+    const systems = new Systems();
+    const result = systems.emp(60);
+    expect(result.shieldDrain).toBe(60);
+    expect(result.lockout).toBe(3);
+    expect(systems.shields).toBe(40);
+    expect(systems.hull).toBe(100);
+    expect(systems.systemsLocked).toBe(true);
+    expect(systems.cannon()).toBe(false);
+    expect(systems.missile()).toBe(false);
+    expect(systems.countermeasures()).toBe(false);
+    expect(systems.focus()).toBe(false);
+    systems.update(2.9);
+    expect(systems.systemsLocked).toBe(true);
+    systems.update(0.1);
+    expect(systems.systemsLocked).toBe(false);
+    expect(systems.cannon()).toBe(true);
+  });
+  it('EMP drains no more than current shields and halves on Assist', () => {
+    const systems = new Systems('assist');
+    systems.shields = 20;
+    expect(systems.emp(60).shieldDrain).toBe(20);
+    expect(systems.shields).toBe(0);
+    expect(systems.hull).toBe(100);
+    expect(systems.empLockout).toBe(3);
+  });
 });

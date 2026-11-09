@@ -13,7 +13,7 @@ export default defineConfig({
   expect: { timeout: 10000 },
   fullyParallel: false,
   workers: 1,
-  reporter: [['list'], ['json', { outputFile: 'docs/evidence/acceptance-results.json' }]],
+  reporter: [['list'], ['json', { outputFile: process.env.SPACE_ACCEPTANCE_REPORT || 'docs/evidence/acceptance-results.json' }]],
   use: {
     baseURL: process.env.ACCEPTANCE_URL || 'https://localhost:8443',
     // Only the local development certificate is bypassed. Public hosts must use trusted TLS.

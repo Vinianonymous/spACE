@@ -6,6 +6,7 @@ export class Input {
   settings: MouseSettings = { ...DEFAULT_MOUSE };
   private firing = false;
   private wasLocked = false;
+  private mouseWarmupUntil = 0;
   onPause = () => {};
   onTarget = () => {};
   onMissile = () => {};
@@ -14,6 +15,7 @@ export class Input {
   onMouseError = () => {};
   onCountermeasures = () => {};
   onFocus = () => {};
+  onObjective = () => {};
   active = false;
 
   constructor(private canvas: HTMLCanvasElement) {
@@ -29,6 +31,8 @@ export class Input {
         if (this.active && event.code === 'KeyM') this.onMissile();
         if (this.active && event.code === 'KeyX') this.onCountermeasures();
         if (this.active && event.code === 'KeyV') this.onFocus();
+        if (this.active && event.code === 'KeyG') this.onObjective();
+        if (this.active && event.code === 'KeyZ' && this.settings.mode === 'yoke') this.mouse.clear();
         if (event.code === 'KeyH') this.onHelp();
       }
       this.keys.add(event.code);
@@ -36,8 +40,11 @@ export class Input {
     window.addEventListener('keyup', (event) => this.keys.delete(event.code));
     document.addEventListener('mousemove', (event) => {
       if (!this.active) return;
-      if (this.settings.mode === 'relative') {
+      if (this.settings.mode !== 'position') {
         if (document.pointerLockElement !== canvas) return;
+        // Browser/OS cursor warps on capture can emit spurious deltas, especially
+        // after clicking a pause-menu button. Never interpret those as pilot input.
+        if (performance.now() < this.mouseWarmupUntil) return;
         this.mouse.dx += event.movementX;
         this.mouse.dy += event.movementY;
       } else if (event.target === canvas) {
@@ -49,7 +56,7 @@ export class Input {
     canvas.addEventListener('pointerleave', () => { this.mouse.steering = false; });
     canvas.addEventListener('pointerdown', (event) => {
       if (!this.active) return;
-      if (this.settings.mode === 'relative' && document.pointerLockElement !== canvas) { this.captureMouse(); return; }
+      if (this.settings.mode !== 'position' && document.pointerLockElement !== canvas) { this.captureMouse(); return; }
       if (event.button === 0) this.firing = true;
       if (event.button === 2 && this.active) this.onMissile();
     });
@@ -60,13 +67,14 @@ export class Input {
       const lost = this.wasLocked && !locked;
       this.wasLocked = locked;
       this.mouse.clear();
-      if (lost && this.active && this.settings.mode === 'relative') this.onMouseReleased();
+      if (locked) this.mouseWarmupUntil = performance.now() + 120;
+      if (lost && this.active && this.settings.mode !== 'position') this.onMouseReleased();
     });
     document.addEventListener('pointerlockerror', () => this.onMouseError());
   }
 
   captureMouse() {
-    if (this.settings.mode !== 'relative' || !this.active || document.pointerLockElement === this.canvas) return;
+    if (this.settings.mode === 'position' || !this.active || document.pointerLockElement === this.canvas) return;
     try {
       const request = this.canvas.requestPointerLock();
       if (request) request.catch(() => this.onMouseError());
@@ -100,7 +108,7 @@ export class Input {
     return {
       pitch: Math.max(-1, Math.min(1, axis(['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + mouse.pitch)),
       yaw: Math.max(-1, Math.min(1, axis(['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + mouse.yaw)),
-      roll: axis(['KeyE'], ['KeyQ']),
+      roll: Math.max(-1, Math.min(1, axis(['KeyE'], ['KeyQ']) + mouse.roll)),
       throttle: axis(['KeyR'], ['KeyF']),
       boost: this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'),
     };
