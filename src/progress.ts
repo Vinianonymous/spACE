@@ -1,11 +1,13 @@
 import { DEFAULT_LOADOUT, PARTS, SLOTS, fittingIssues, initialParts, partById, shipById, upgradePrice, type Loadout, type PartId, type PartLevels, type ShipId } from './catalog';
 import { isCampaignId, type CampaignId } from './campaign';
+import { missingPartRequirements, missingShipRequirements } from './tech-tree';
+import { ABILITIES, abilityById, missingAbilityRequirement, type AbilityId } from './abilities';
 
 // Retain the original storage key so existing phase-2 saves are discovered and migrated.
 export const PROGRESS_KEY = 'space.progress.v1';
 const BACKUP_KEY = `${PROGRESS_KEY}.backup`;
 export interface Progress {
-  version: 3;
+  version: 4;
   credits: number;
   mission2Unlocked: boolean;
   unlockedMission: CampaignId;
@@ -16,20 +18,25 @@ export interface Progress {
   selectedShip: ShipId;
   parts: PartLevels;
   loadouts: Partial<Record<ShipId, Loadout>>;
+  ownedAbilities: AbilityId[];
+  selectedAbility: AbilityId;
   lastResult?: { id: string; credits: number; seconds: number; missionId?: CampaignId; optionalComplete?: boolean };
 }
-export const freshProgress = (): Progress => ({ version: 3, credits: 0, mission2Unlocked: false, unlockedMission: 1, completedMissions: [], campaignComplete: false, completedRuns: [], ownedShips: ['kestrel'], selectedShip: 'kestrel', parts: initialParts(), loadouts: { kestrel: { ...DEFAULT_LOADOUT } } });
+export const freshProgress = (): Progress => ({ version: 4, credits: 0, mission2Unlocked: false, unlockedMission: 1, completedMissions: [], campaignComplete: false, completedRuns: [], ownedShips: ['kestrel'], selectedShip: 'kestrel', parts: initialParts(), loadouts: { kestrel: { ...DEFAULT_LOADOUT } }, ownedAbilities: ['focus'], selectedAbility: 'focus' });
 export interface StorageLike { getItem(key: string): string | null; setItem(key: string, value: string): void }
 
 export function parseProgress(value: string): Progress {
   let data = JSON.parse(value) as Progress;
-  if (![1, 2, 3].includes(data?.version) || !Number.isSafeInteger(data.credits) || data.credits < 0 ||
+  if (![1, 2, 3, 4].includes(data?.version) || !Number.isSafeInteger(data.credits) || data.credits < 0 ||
       typeof data.mission2Unlocked !== 'boolean' || !Array.isArray(data.completedRuns) ||
       data.completedRuns.some((id) => typeof id !== 'string') ||
       (data.lastResult && (typeof data.lastResult.id !== 'string' || !Number.isSafeInteger(data.lastResult.credits) || data.lastResult.credits < 0 || !Number.isFinite(data.lastResult.seconds) || data.lastResult.seconds < 0))) throw new Error('Invalid progression save');
   const oldVersion = Number(data.version);
   if (oldVersion === 1) data = { ...freshProgress(), credits: data.credits, completedRuns: data.completedRuns, mission2Unlocked: data.mission2Unlocked, ...(data.lastResult ? { lastResult: data.lastResult } : {}) };
-  if (oldVersion < 3) data = { ...data, version: 3, unlockedMission: data.mission2Unlocked ? 2 : 1, completedMissions: data.mission2Unlocked ? [1] : [], campaignComplete: false, ...(data.lastResult ? { lastResult: { ...data.lastResult, missionId: 1 } } : {}) };
+  if (oldVersion < 3) data = { ...data, unlockedMission: data.mission2Unlocked ? 2 : 1, completedMissions: data.mission2Unlocked ? [1] : [], campaignComplete: false, ...(data.lastResult ? { lastResult: { ...data.lastResult, missionId: 1 } } : {}) };
+  if (oldVersion < 4) data = { ...data, version: 4, ownedAbilities: ['focus'], selectedAbility: 'focus' };
+  if (!Array.isArray(data.ownedAbilities) || !data.ownedAbilities.includes('focus') || new Set(data.ownedAbilities).size !== data.ownedAbilities.length ||
+      data.ownedAbilities.some((id) => !abilityById(id)) || !data.ownedAbilities.includes(data.selectedAbility)) throw new Error('Invalid ability inventory save');
   if (!Array.isArray(data.ownedShips) || !data.ownedShips.includes('kestrel') || new Set(data.ownedShips).size !== data.ownedShips.length ||
       data.ownedShips.some((id) => !shipById(id)) || !data.ownedShips.includes(data.selectedShip) || !data.parts || typeof data.parts !== 'object' || Array.isArray(data.parts) ||
       Object.entries(data.parts).some(([id, tier]) => !partById(id) || !Number.isInteger(tier) || tier < 1 || tier > 3) ||
@@ -42,10 +49,11 @@ export function parseProgress(value: string): Progress {
       data.campaignComplete !== data.completedMissions.includes(5) || data.mission2Unlocked !== (data.unlockedMission >= 2) ||
       (data.lastResult && (!isCampaignId(data.lastResult.missionId) || (data.lastResult.optionalComplete !== undefined && typeof data.lastResult.optionalComplete !== 'boolean')))) throw new Error('Invalid campaign progression save');
   // Normalize to known fields rather than retaining arbitrary imported objects.
-  return { version: 3, credits: data.credits, mission2Unlocked: data.mission2Unlocked, unlockedMission: data.unlockedMission, completedMissions: [...data.completedMissions], campaignComplete: data.campaignComplete, completedRuns: [...data.completedRuns],
+  return { version: 4, credits: data.credits, mission2Unlocked: data.mission2Unlocked, unlockedMission: data.unlockedMission, completedMissions: [...data.completedMissions], campaignComplete: data.campaignComplete, completedRuns: [...data.completedRuns],
     ownedShips: [...data.ownedShips], selectedShip: data.selectedShip,
     parts: Object.fromEntries(PARTS.filter((part) => data.parts[part.id]).map((part) => [part.id, data.parts[part.id]])),
     loadouts: Object.fromEntries(data.ownedShips.map((id) => [id, Object.fromEntries(SLOTS.map((slot) => [slot, data.loadouts[id]![slot]]))])),
+    ownedAbilities: ABILITIES.filter((ability) => data.ownedAbilities.includes(ability.id)).map((ability) => ability.id), selectedAbility: data.selectedAbility,
     ...(data.lastResult ? { lastResult: { ...data.lastResult } } : {}),
   };
 }
@@ -109,6 +117,8 @@ export class ProgressStore {
     const ship = shipById(id);
     if (!ship) throw new Error('Unknown ship.');
     if (this.data.ownedShips.includes(id)) throw new Error('Ship already owned.');
+    const missing = missingShipRequirements(id, this.data);
+    if (missing.length) throw new Error(`Requires ${missing.join(' + ')} before buying ${ship.name}.`);
     this.purchase(ship.price, (next) => { next.ownedShips.push(id); next.loadouts[id] = { ...DEFAULT_LOADOUT }; });
   }
 
@@ -116,6 +126,8 @@ export class ProgressStore {
     const part = partById(id);
     if (!part) throw new Error('Unknown part.');
     if (this.data.parts[id]) throw new Error('Part already owned.');
+    const missing = missingPartRequirements(id, this.data);
+    if (missing.length) throw new Error(`Requires ${missing.join(' + ')} before buying ${part.name}.`);
     this.purchase(part.price, (next) => { next.parts[id] = 1; });
   }
 
@@ -124,6 +136,20 @@ export class ProgressStore {
     if (!partById(id) || !tier) throw new Error('Buy this part before upgrading it.');
     if (tier >= 3) throw new Error('Maximum upgrade tier reached.');
     this.purchase(upgradePrice(id, tier), (next) => { next.parts[id] = tier + 1; });
+  }
+
+  buyAbility(id: AbilityId) {
+    const ability = abilityById(id);
+    if (!ability) throw new Error('Unknown ability.');
+    if (this.data.ownedAbilities.includes(id)) throw new Error('Ability already owned.');
+    const missing = missingAbilityRequirement(id, this.data);
+    if (missing) throw new Error(`Requires ${missing} before buying ${ability.name}.`);
+    this.purchase(ability.price, (next) => { next.ownedAbilities.push(id); });
+  }
+
+  selectAbility(id: AbilityId) {
+    if (!this.data.ownedAbilities.includes(id)) throw new Error('Ability not owned.');
+    this.purchase(0, (next) => { next.selectedAbility = id; });
   }
 
   selectShip(id: ShipId) {

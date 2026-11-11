@@ -117,6 +117,7 @@ describe('inventory transactions and save compatibility', () => {
 
   it('caps all ten parts at tier 3 and never charges for an invalid upgrade', () => {
     const { store } = funded();
+    for (const ship of SHIPS.slice(1)) store.buyShip(ship.id);
     for (const part of PARTS) {
       if (!store.data.parts[part.id]) store.buyPart(part.id);
       store.upgradePart(part.id); store.upgradePart(part.id);
@@ -129,6 +130,7 @@ describe('inventory transactions and save compatibility', () => {
 
   it('keeps the last valid loadout after an incompatible or over-capacity draft', () => {
     const { store } = funded();
+    for (const ship of SHIPS.slice(1)) store.buyShip(ship.id);
     for (const part of PARTS) if (!store.data.parts[part.id]) store.buyPart(part.id);
     const before = store.export();
     expect(() => store.equip('kestrel', { primary: 'laser', secondary: 'torpedoes', engine: 'vector', shield: 'reinforced', utility: 'cooling' })).toThrow('capacity');
@@ -140,7 +142,7 @@ describe('inventory transactions and save compatibility', () => {
     const old = { version: 1, credits: 4321, mission2Unlocked: true, completedRuns: ['old-run'], lastResult: { id: 'old-run', credits: 2000, seconds: 90 } };
     local.setItem(PROGRESS_KEY, JSON.stringify(old));
     const store = new ProgressStore(local);
-    expect(store.data.version).toBe(3);
+    expect(store.data.version).toBe(4);
     expect(store.data.credits).toBe(4321);
     expect(store.complete('old-run', 2000, 90)).toBe(false);
     expect(store.data.lastResult).toEqual({ ...old.lastResult, missionId: 1 });
@@ -150,7 +152,7 @@ describe('inventory transactions and save compatibility', () => {
   });
 
   it('round-trips an exported save and retains the replaced save before a confirmed import', () => {
-    const { store } = funded(); store.buyShip('paladin'); store.selectShip('paladin');
+    const { store } = funded(); for (const ship of SHIPS.slice(1)) store.buyShip(ship.id); store.selectShip('paladin');
     const local = storage(), target = new ProgressStore(local);
     target.complete('existing', 1500, 30);
     const original = local.getItem(PROGRESS_KEY);

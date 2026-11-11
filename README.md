@@ -2,7 +2,7 @@
 
 A browser-based, pixelated 3D arcade space-combat prototype set above Mars in 2256. Fly as **Lion**, Tetragon’s experimental rookie pilot, in Exavius’s EX-01 Kestrel.
 
-This is the **phase-4 campaign and Wave Survival build with step-5 release-preparation settings**: five sequential, replayable missions, six flyable hulls, ten interchangeable parts, three tiers per part, and persistent builds. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships now fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is a prototype, not a fully balanced v1.0 release.
+This is the **campaign and Wave Survival prototype with a hangar tech tree**: five sequential, replayable missions, six flyable hulls, ten interchangeable parts, three tiers per part, persistent builds, and three optional Vextra Focus replacements. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is not a fully balanced v1.0 release.
 
 The flight HUD is visible only during active flight. Title, briefing, hangar, pause, debrief, and failure screens hide the combat readouts instead of leaving them over the menu. Local desktop packaging is documented as an optional path, not a platform change: [desktop packaging tradeoffs](docs/DESKTOP.md).
 
@@ -48,7 +48,7 @@ Alternatively, serve `dist/` on a static HTTPS host. Relative asset URLs support
 | Track campaign objective / return to hostile targeting | G / Tab |
 | Padlock camera | Hold C; release to return to chase view |
 | Countermeasures | X |
-| Vextra Focus | V |
+| Equipped Vextra ability | V |
 | Recenter mouse yoke | Z (in Mouse yoke mode) |
 | Pause / resume | Escape |
 | Flight manual and quality settings | H |
@@ -65,11 +65,11 @@ The table lists **default** keyboard bindings. In **H → Remap Keyboard Control
 
 - Complete flight checks, a cannon kill, a guided-missile kill, countermeasure training, and a five-second Vextra Focus demonstration before the Trusan raid.
 - Shields recharge after five damage-free seconds; hull does not. Continuous cannon fire overheats. Each sortie starts with 24 missiles; restarts replenish them for free.
-- Countermeasures break missile guidance and recharge in eight seconds. Focus enhances acquisition/aim assist for five seconds, followed by a 30-second cooldown. It is required only for its tutorial demonstration.
+- Countermeasures break missile guidance and recharge in eight seconds. Focus enhances acquisition/aim assist for five seconds, followed by a 30-second cooldown. First Light always teaches Focus; the equipped alternative takes over for the raid.
 - Standard and Assist are selectable in the briefing. Assist halves incoming damage and improves lock acquisition without restricting rewards.
 - Wingmates assist in formation but cannot deliver the final blow. Survive and defeat all six raiders to complete the mission.
 - Earn 1,500 base credits plus up to 500 for surviving hull. Replays earn rewards; reloading a debrief never awards the same run twice. Failure/abandonment preserve existing credits.
-- Credits, reward ledger, last debrief, sequential campaign unlocks, owned hulls, part tiers, active ship, and per-hull loadouts save locally with validation, backup recovery, and storage warnings. Export/confirmed import are available in the hangar.
+- Credits, reward ledger, last debrief, sequential campaign unlocks, owned hulls, part tiers, active ship, per-hull loadouts, and selected ability save locally with validation, backup recovery, and storage warnings. Export/confirmed import are available in the hangar.
 
 ### Campaign
 
@@ -81,7 +81,7 @@ Clearing browser data can remove saves. No account or cloud save exists. Scenery
 
 - **Exavius** flight and weapons are unchanged; Lion’s handling, cannon, missiles, countermeasures, and Focus behave exactly as before.
 - **Trusan** raiders remain opportunistic, but a raider below **35% hull** within 1,800 m overclocks its drive, locks onto its target, and dives at 380 m/s. A 3.2-second fuse ends in a proximity detonation (up to 42 damage, falling off to 35% at the 170 m edge). Destroy it or break away. A self-detonating raider still counts as a destroyed sortie contact and advances mission progress, but does not award player kill credit or Survival siphon healing.
-- **Naurae** ships charge a telegraphed EMP for **1.6 seconds** within 950 m. The blast drains up to 45 shields without damaging hull and locks cannon, missiles, countermeasures, and Focus for **3 seconds**. Lion’s systems then harden for **6 seconds**, so several Naurae cannot chain-lock every weapon. Damaged Naurae at or below **75% hull** also teleport to a new firing solution on a 12-second cooldown, breaking an existing lock.
+- **Naurae** ships charge a telegraphed EMP for **1.6 seconds** within 950 m. The blast drains up to 45 shields without damaging hull and locks cannon, missiles, countermeasures, and the equipped ability for **3 seconds**. Lion’s systems then harden for **6 seconds**, so several Naurae cannot chain-lock every weapon. Damaged Naurae at or below **75% integrity** also teleport to a new firing solution on a 12-second cooldown, breaking an existing lock.
 - The warning strip above the reticle shows the active wind-up and countdown; EMP lockout also tints the reticle and vignette. Generated audio cues distinguish EMP charge, teleport, and overclock. Assist halves the EMP shield drain.
 
 ### Performance and quality
@@ -105,10 +105,12 @@ See [Survival details](docs/SURVIVAL.md) and [phase-4 evidence](docs/STEP-4.md).
 
 Open **Hangar / Refit** from title, the briefing, or the debrief. Earn credits by completing/replaying First Light; there is no free-credit/debug purchase mode.
 
-- **Six ships:** Free Kestrel; Viper (3,000 CR), Bastion (4,500), Specter (6,000), Peregrine (7,500), and Paladin (10,000). Every purchase includes a complete default fit. Choose **Set active · Saved loadout** to select an owned hull for the next sortie.
+- **Six ships / connected unlocks:** Free Kestrel → Viper (3,000 CR) → Specter (6,000) and Kestrel → Bastion (4,500) → Peregrine (7,500). Paladin (10,000) requires both Specter and Peregrine. Every purchase includes a complete default fit. Choose **Set active · Saved loadout** to select an owned hull for the next sortie.
 - **Five slots / ten parts:** pulse cannon or rapid laser; guided missiles or heavy torpedoes; standard or vector drive; balanced or reinforced shield; targeting processor or cooling system. Hulls have different fitting capacities. Viper and Specter cannot carry heavy torpedoes.
 - **Draft → Apply:** Selecting a part previews real stat changes. Buy locked parts or upgrade owned ones only after reviewing the price and confirmation. Invalid, unowned, incompatible, or over-capacity drafts cannot be applied or launched. Your last valid fit remains intact. Leaving a draft or changing the previewed hull discards unapplied edits.
 - **Shared tiers:** Every part has tiers 1–3. An upgrade applies wherever that part is equipped. Parts can be reused in multiple saved ship fits without repurchase; only one ship flies at a time. Upgrades do not increase fitting power. Restore Free Default retains purchases/upgrades and costs nothing.
+- **Tech Tree / Research:** The hangar header opens connected ship paths, part acquisition and T2/T3 upgrade nodes, and replacement abilities. Laser is immediately available; Vector drive needs Viper; torpedoes and reinforced shield need Bastion; cooling needs laser. Purchasing and selecting are separate, and locked purchases are rejected even outside the UI. Existing owned hulls and parts stay owned after importing older saves.
+- **Replace Vextra Focus:** Phoenix (Viper, 2,200 CR) launches up to six carried missiles at **distinct** contacts within 1,000 m; no target/ammo means no activation. Bloodthirst (Bastion, 2,200 CR) restores 15% max hull per player kill during its five-second window, with overflow going to shields. Poison (laser, 1,800 CR) tags primary hits during its five-second window for a five-second drain (6 damage/s per stack, up to six per target). Enemy integrity is shown as an outer shield band (30%) and hull (70%); toxin crosses the shield band before hull. Phoenix cools down for 30 seconds from launch; timed abilities cool down for 30 seconds after their window. All replacements use V and obey EMP lockout. Focus remains free and selectable. Survival's token shop is separate.
 - **Real flight effects:** Hull silhouette, speed/handling, boost, hull/shields, recharge, weapon damage/rate/heat, projectile speed, secondary ammunition/tracking, and lock acquisition use the same data as the hangar stat table. The starter’s default stats are preserved.
 - **Save compatibility:** Version-1/2 saves migrate to version 3 with credits, equipment, and reward history retained; legacy mission-2 unlocks grant campaign access through mission 2. Version-1 saves receive starter gear. The original storage key is retained. Survival is never saved. Valid previous data is backed up before writes.
 - **Export/import:** Export Save downloads JSON. Import Save validates a file (up to 1 MB), previews its contents, and requires explicit replacement confirmation. It replaces, rather than merges, progress. Existing on-disk data is retained in a before-import backup when storage permits. Invalid imports do not mutate current progress or silently reset it. Storage failures keep the session playable with a visible warning; export before closing.

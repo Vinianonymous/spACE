@@ -83,7 +83,7 @@ describe('sequential campaign saves', () => {
     const old = { ...freshProgress(), version: 2, mission2Unlocked: true };
     const migrated = parseProgress(JSON.stringify(old));
     expect(migrated.unlockedMission).toBe(2); expect(migrated.completedMissions).toEqual([1]);
-    expect(migrated.version).toBe(3);
+    expect(migrated.version).toBe(4);
     expect(() => parseProgress(JSON.stringify({ ...freshProgress(), unlockedMission: 5 }))).toThrow('campaign');
   });
 });

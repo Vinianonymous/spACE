@@ -11,6 +11,7 @@ import { Systems } from './systems';
 import { ProgressStore } from './progress';
 import { LESSONS, Mission, type MissionStage } from './mission';
 import { FlightAudio } from './audio';
+import { abilityById, contactLayers, phoenixTargets } from './abilities';
 import { BINDING_LABELS, DEFAULT_BINDINGS, PREFS_KEY, bindKey, keyLabel, parsePreferences, type Binding, type Preferences } from './preferences';
 import { Hangar } from './hangar';
 import { DEFAULT_STATS, buildStats, fittingIssues, partById, shipById, type ShipId } from './catalog';
@@ -27,7 +28,7 @@ interface Drone {
   radius: number; attacksObjective: boolean; lastVolley: number;
   empCooldown: number; empCharge: number; teleportCooldown: number; overclock: number; overclockCooldown: number;
 }
-interface Projectile { mesh: THREE.Mesh; velocity: THREE.Vector3; age: number; target?: Drone; damage: number; side: 'player' | 'enemy' | 'ally'; homing?: boolean; practice?: boolean; speed?: number; turn?: number; victim?: 'player' | 'objective'; weapon?: 'primary' | 'secondary' }
+interface Projectile { mesh: THREE.Mesh; velocity: THREE.Vector3; age: number; target?: Drone; damage: number; side: 'player' | 'enemy' | 'ally'; homing?: boolean; practice?: boolean; speed?: number; turn?: number; victim?: 'player' | 'objective'; weapon?: 'primary' | 'secondary'; poison?: boolean }
 interface Guidance { mesh: THREE.Group; health: number; maxHealth: number; id: number; hostile: boolean; faction: Faction | 'exavius'; label: string; kind?: TargetKind | 'objective'; required?: boolean }
 interface Particle { mesh: THREE.Mesh; velocity: THREE.Vector3; age: number }
 
@@ -51,6 +52,7 @@ export class Game {
   }
   private drones: Drone[] = [];
   private projectiles: Projectile[] = [];
+  private poisonEffects: { target: Drone; remaining: number; pending: number }[] = [];
   private particles: Particle[] = [];
   private selected = 0;
   private lock = 0;
@@ -342,6 +344,7 @@ export class Game {
 
   private spawnDrones(count: number, hostile: boolean) {
     for (const drone of this.drones) this.scene.remove(drone.mesh);
+    this.poisonEffects = [];
     this.drones = Array.from({ length: count }, (_, i) => {
       const mesh = this.dronePool[i] ||= createShip(true);
       mesh.scale.setScalar(1.7);
@@ -510,11 +513,11 @@ export class Game {
     const hull = Math.min(1, this.systems.hull / this.build.hull + 0.25);
     this.survival.next();
     this.build = survivalStats(this.baseBuild, this.survival);
-    this.systems = new Systems(this.systems.difficulty, this.build);
+    this.systems = new Systems(this.systems.difficulty, this.build, this.progress.data.selectedAbility);
     this.systems.hull = this.build.hull * hull;
     this.flight.stats = this.build; this.flight.boost = this.build.boostCapacity;
     for (const shot of this.projectiles) this.scene.remove(shot.mesh);
-    this.projectiles = []; this.fireCooldown = 0; this.ionTimer = 0;
+    this.projectiles = []; this.poisonEffects = []; this.fireCooldown = 0; this.ionTimer = 0;
     $('survival-shop').hidden = true;
     this.state = 'flying'; this.input.clear(); this.input.active = true; this.releaseButtonFocus(); this.previousTime = performance.now();
     this.processSurvivalEvents();
@@ -534,7 +537,8 @@ export class Game {
     this.setPlayerShip(data.selectedShip);
     this.mode = mode;
     this.mission = new Mission();
-    this.systems = new Systems($<HTMLSelectElement>('difficulty').value === 'assist' ? 'assist' : 'standard', this.build);
+    this.systems = new Systems($<HTMLSelectElement>('difficulty').value === 'assist' ? 'assist' : 'standard', this.build,
+      mode === 'mission' && this.campaignId === 1 ? 'focus' : data.selectedAbility);
     this.runId = crypto.randomUUID?.() || Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, '0')).join('');
     this.pendingStage = undefined;
     this.pendingVictory = false;
@@ -556,6 +560,7 @@ export class Game {
     for (const projectile of this.projectiles) this.scene.remove(projectile.mesh);
     for (const particle of this.particles) this.scene.remove(particle.mesh);
     this.projectiles = [];
+    this.poisonEffects = [];
     this.particles = [];
     if (mode === 'exercise') this.resetDrones();
     else this.spawnDrones(0, false);
@@ -566,7 +571,7 @@ export class Game {
     document.body.classList.add('in-flight');
     this.releaseButtonFocus();
     this.camera.position.set(0, 9, 214);
-    this.notice('LION, YOU ARE CLEARED. HOLD SPACE TO FIRE.');
+    this.notice(`LION, YOU ARE CLEARED. HOLD ${keyLabel(this.input.bindings.fire)} TO FIRE.`);
     $('radio').textContent = '“Keep your target inside the reticle. Green brackets mean missile lock.”';
     $('mission-name').textContent = mode === 'mission' ? missionById(this.campaignId)!.title.toUpperCase() : mode === 'survival' ? 'WAVE SURVIVAL' : 'THE PROVING GROUND';
     $('objective').textContent = 'Eliminate eight Trusan training drones. No incoming fire.';
@@ -612,6 +617,7 @@ export class Game {
     for (const wingmate of this.wingmates) wingmate.visible = false;
     for (const projectile of this.projectiles) this.scene.remove(projectile.mesh);
     this.projectiles = [];
+    this.poisonEffects = [];
     for (const particle of this.particles) this.scene.remove(particle.mesh);
     this.particles = [];
     $('mission-name').textContent = 'FIRST LIGHT';
@@ -633,12 +639,12 @@ export class Game {
     if (this.state === 'standby' || this.state === 'briefing') {
       this.build = buildStats(data.selectedShip, loadout, data.parts);
       this.flight = new Flight(this.build);
-      this.systems = new Systems('standard', this.build);
+      this.systems = new Systems('standard', this.build, data.selectedAbility);
     }
     $('equipped-ship').textContent = `${ship.code} ${ship.name.toUpperCase()}`;
     $('primary-name').textContent = partById(loadout.primary)!.name.toUpperCase();
     $('secondary-name').textContent = partById(loadout.secondary)!.name.toUpperCase();
-    $('briefing-loadout').textContent = `SELECTED: ${ship.code} ${ship.name} / ${partById(loadout.primary)!.name} / ${partById(loadout.secondary)!.name}. Change your saved build in the hangar.`;
+    $('briefing-loadout').textContent = `SELECTED: ${ship.code} ${ship.name} / ${partById(loadout.primary)!.name} / ${partById(loadout.secondary)!.name} / ${abilityById(data.selectedAbility)!.name}. Change your saved build in the hangar.`;
   }
 
   private setPlayerShip(id: ShipId) {
@@ -709,9 +715,27 @@ export class Game {
 
   private activateFocus() {
     if (this.mode === 'mission' && this.campaignId === 1 && !['focus', 'raid'].includes(this.mission.stage)) { this.notice('IMPLANT CHECK PENDING — COMPLETE THE CURRENT LESSON'); return; }
-    if (this.state !== 'flying' || !this.systems.focus()) return;
+    if (this.state !== 'flying') return;
+    if (this.systems.ability === 'phoenix') {
+      const targets = phoenixTargets(this.drones.filter((actor) => actor.health > 0 && (actor.hostile || actor.required || this.mode === 'exercise'))
+        .map((actor) => ({ target: actor, distance: actor.mesh.position.distanceTo(this.flight.position) })), this.systems.ammo);
+      if (!targets.length) { this.notice(this.systems.ammo ? 'PHOENIX — NO TARGETS WITHIN 1,000 M' : 'PHOENIX — MISSILE RACK EMPTY'); return; }
+      if (!this.systems.focus() || !this.systems.salvo(targets.length)) return;
+      for (const [index, target] of targets.entries()) {
+        const mesh = new THREE.Mesh(this.missileGeometry, this.missileMaterial);
+        mesh.position.copy(this.flight.position).add(new THREE.Vector3((index - targets.length / 2) * 2, -2, -5).applyQuaternion(this.flight.rotation));
+        this.scene.add(mesh);
+        const heavy = this.build.missileAmmo === 8;
+        mesh.scale.setScalar(heavy ? 1.6 : 1);
+        this.projectiles.push({ mesh, velocity: FORWARD.clone().applyQuaternion(this.flight.rotation).multiplyScalar(heavy ? 260 : 420), age: 0,
+          target, damage: this.build.secondaryDamage, side: 'player', speed: this.build.secondarySpeed, turn: this.build.secondaryTurn, weapon: 'secondary' });
+      }
+      this.audio.tone('missile'); this.notice(`PHOENIX — ${targets.length} DISTINCT TARGETS ENGAGED`);
+      return;
+    }
+    if (!this.systems.focus()) return;
     this.audio.tone('focus');
-    this.notice('VEXTRA FOCUS ACTIVE — TARGETING AUGMENTED');
+    this.notice(`${abilityById(this.systems.ability)!.name.toUpperCase()} ACTIVE — ${this.systems.ability === 'bloodthirst' ? 'KILLS RESTORE HULL, THEN SHIELDS' : this.systems.ability === 'poison' ? 'PRIMARY HITS INFLICT 5s TOXIN' : 'TARGETING AUGMENTED'}`);
     if (this.mode === 'mission' && this.mission.stage === 'focus') this.mission.focused = true;
   }
 
@@ -805,14 +829,14 @@ export class Game {
     const target = this.objectiveSelected ? undefined : this.drones[this.selected];
     if (target && target.health > 0) {
       const predicted = target.mesh.position.clone().sub(origin).normalize();
-      if (direction.dot(predicted) > Math.cos(THREE.MathUtils.degToRad(this.build.aimCone + (this.systems.focusTime > 0 ? 3 : 0)))) direction.lerp(predicted, 0.95).normalize();
+      if (direction.dot(predicted) > Math.cos(THREE.MathUtils.degToRad(this.build.aimCone + (this.systems.ability === 'focus' && this.systems.focusTime > 0 ? 3 : 0)))) direction.lerp(predicted, 0.95).normalize();
     }
     const mesh = new THREE.Mesh(this.laserGeometry, this.laserMaterial);
     mesh.position.copy(origin);
     mesh.quaternion.setFromUnitVectors(FORWARD, direction);
     this.scene.add(mesh);
     this.laserMaterial.color.setHex(this.progress.data.loadouts[this.progress.data.selectedShip]!.primary === 'laser' ? 0x8fdfff : 0xc6ff9b);
-    this.projectiles.push({ mesh, velocity: direction.multiplyScalar(this.build.primarySpeed + this.flight.speed), age: 0, damage: this.build.primaryDamage, side: 'player', weapon: 'primary' });
+    this.projectiles.push({ mesh, velocity: direction.multiplyScalar(this.build.primarySpeed + this.flight.speed), age: 0, damage: this.build.primaryDamage, side: 'player', weapon: 'primary', poison: this.systems.ability === 'poison' && this.systems.focusTime > 0 });
   }
 
   private fireMissile() {
@@ -834,13 +858,13 @@ export class Game {
     this.notice(heavy ? 'HEAVY TORPEDO AWAY' : 'FOX TWO — MISSILE AWAY');
   }
 
-  private hit(drone: Drone, damage: number, credit = true) {
+  private hit(drone: Drone, damage: number, credit = true, quiet = false) {
     if (drone.health <= 0) return;
     drone.health = Math.max(0, drone.health - damage);
-    this.audio.tone('hit');
-    this.explode(drone.mesh.position, drone.health === 0 ? 22 : 4);
+    if (!quiet || drone.health === 0) { this.audio.tone('hit'); this.explode(drone.mesh.position, drone.health === 0 ? 22 : 4); }
     if (drone.health > 0) return;
     drone.mesh.visible = false;
+    if (credit) this.systems.bloodthirstKill();
     // mission.kills is the sortie progress counter, so a self-detonating contact still advances it.
     // Player credit (siphon, notice) is tracked separately via `credit`.
     this.mission.kills++;
@@ -1068,6 +1092,7 @@ export class Game {
           if (projectile.side === 'ally') drone.health = Math.max(35, drone.health - projectile.damage);
           else {
             this.hit(drone, projectile.damage);
+            if (projectile.poison && drone.health > 0 && this.poisonEffects.filter((effect) => effect.target === drone).length < 6) this.poisonEffects.push({ target: drone, remaining: 5, pending: 0 });
             if (this.survival && projectile.weapon) {
               const nearby = this.drones.filter((other) => other !== drone && other.health > 0 && other.mesh.position.distanceTo(drone.mesh.position) < 180).sort((a, b) => a.mesh.position.distanceToSquared(drone.mesh.position) - b.mesh.position.distanceToSquared(drone.mesh.position));
               if (projectile.weapon === 'primary' && this.survival.skills.arc) for (const other of nearby.slice(0, 2)) this.hit(other, 15 * this.survival.skills.arc);
@@ -1086,6 +1111,15 @@ export class Game {
         this.scene.remove(projectile.mesh);
         this.projectiles.splice(i, 1);
       }
+    }
+    for (let i = this.poisonEffects.length - 1; i >= 0; i--) {
+      const effect = this.poisonEffects[i];
+      if (effect.target.health <= 0) { this.poisonEffects.splice(i, 1); continue; }
+      const step = Math.min(effect.remaining, dt);
+      effect.remaining -= step;
+      effect.pending += step;
+      if (effect.pending >= 0.25 || effect.remaining <= 0) { this.hit(effect.target, 6 * effect.pending, true, true); effect.pending = 0; }
+      if (effect.remaining <= 0 || effect.target.health <= 0) this.poisonEffects.splice(i, 1);
     }
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const particle = this.particles[i];
@@ -1238,9 +1272,10 @@ export class Game {
     $('cannon-state').textContent = locked ? `EMP LOCKOUT ${this.systems.empLockout.toFixed(1)}s` : this.systems.overheated ? 'OVERHEATED — COOLING' : `HEAT ${Math.round(this.systems.heat)}% [${keyLabel(this.input.bindings.fire)}]`;
     $('heat-bar').style.width = `${this.systems.heat}%`;
     $('flare-state').textContent = locked ? 'SYSTEMS LOCKED' : this.systems.countermeasureCooldown > 0 ? `${this.systems.countermeasureCooldown.toFixed(1)}s` : 'READY';
+    $('focus-name').textContent = abilityById(this.systems.ability)!.name.toUpperCase();
     $('focus-state').textContent = locked ? 'SYSTEMS LOCKED' : this.systems.focusTime > 0 ? `ACTIVE ${this.systems.focusTime.toFixed(1)}s` : this.systems.focusCooldown > 0 ? `${this.systems.focusCooldown.toFixed(1)}s` : 'READY';
     $('focus-bar').style.width = `${this.systems.focusTime > 0 ? this.systems.focusTime / 5 * 100 : (1 - this.systems.focusCooldown / this.build.focusCooldown) * 100}%`;
-    document.body.classList.toggle('focus-active', this.systems.focusTime > 0);
+    document.body.classList.toggle('focus-active', this.systems.ability === 'focus' && this.systems.focusTime > 0);
     document.body.classList.toggle('damage-flash', performance.now() < this.damageUntil);
     $('missile-warning').hidden = !this.projectiles.some((shot) => shot.side === 'enemy' && shot.homing && shot.age < 12);
     const empThreat = this.drones.find((actor) => actor.health > 0 && actor.faction === 'naurae' && actor.empCharge > 0);
@@ -1302,7 +1337,9 @@ export class Game {
       marker.classList.toggle('locked', this.lock === 1);
       marker.dataset.faction = drone.faction;
       $('target-label').textContent = `${drone.faction.toUpperCase()} / ${drone.label}`;
-      $('target-range').textContent = `${Math.round(distance)} M${drone.faction === 'exavius' ? ' · NAVIGATION' : ` · HULL ${Math.ceil(drone.health / drone.maxHealth * 100)}%`}`;
+      const layers = contactLayers(drone.health, drone.maxHealth);
+      const toxin = this.poisonEffects.filter((effect) => effect.target === drone).length;
+      $('target-range').textContent = `${Math.round(distance)} M${drone.faction === 'exavius' ? ' · NAVIGATION' : ` · SH ${Math.ceil(layers.shields / layers.shieldMaximum * 100)}% / HL ${Math.ceil(layers.hull / layers.hullMaximum * 100)}%${toxin ? ` · TOXIN ${toxin}` : ''}`}`;
     }
     if (this.flight.position.length() > 5500 && active) this.notice('SECTOR LIMIT — AUTOPILOT CORRECTING COURSE');
     if (this.mode === 'mission' && active && this.mission.stage === 'flight') {
@@ -1373,13 +1410,16 @@ export class Game {
         this.systems.update(dt);
         if (this.mode === 'mission' && this.campaignId === 1) {
           if (this.mission.flightCheck(controls)) this.enterStage('cannon');
-          if (this.mission.stage === 'focus' && this.mission.focused && this.systems.focusTime === 0) this.enterStage('raid');
+          if (this.mission.stage === 'focus' && this.mission.focused && this.systems.focusTime === 0) {
+            this.systems.ability = this.progress.data.selectedAbility;
+            this.enterStage('raid');
+          }
           if (this.mission.stage === 'raid') this.mission.raidTime += dt;
         }
         this.updateEnemies(dt);
         this.updateWingmates(dt);
         const target = this.drones[this.selected];
-        const acquisition = this.build.lockSpeed * (this.systems.focusTime > 0 ? 2.5 : 1) * (this.systems.difficulty === 'assist' ? 1.5 : 1);
+        const acquisition = this.build.lockSpeed * (this.systems.ability === 'focus' && this.systems.focusTime > 0 ? 2.5 : 1) * (this.systems.difficulty === 'assist' ? 1.5 : 1);
         this.lock = lockProgress(this.lock, !this.objectiveSelected && !!target && target.health > 0 && canLock(this.flight.position, this.flight.rotation, target.mesh.position, this.build.lockCone), dt * acquisition);
         this.fireCooldown = Math.max(0, this.fireCooldown - dt);
         if (this.input.fire) this.fireCannon();

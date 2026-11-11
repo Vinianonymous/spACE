@@ -131,7 +131,9 @@ test('all six hulls can be bought, selected, and flown with their own defenses a
 test('purchased laser, torpedoes, and reinforced shields actually change combat and restart resources', async ({ page }) => {
   test.setTimeout(90000);
   await page.goto('/'); await page.locator('#open-hangar').click(); await fundThroughImport(page);
-  await page.locator('#ship-paladin').click(); await page.locator('#hangar-ship-action').click(); await confirm(page);
+  for (const id of ['viper', 'bastion', 'specter', 'peregrine', 'paladin']) {
+    await page.locator(`#ship-${id}`).click(); await page.locator('#hangar-ship-action').click(); await confirm(page);
+  }
   await page.locator('#hangar-ship-action').click();
   for (const [slot, id] of [['primary', 'laser'], ['secondary', 'torpedoes'], ['shield', 'reinforced']]) {
     await page.locator(`#part-${slot}`).selectOption(id);

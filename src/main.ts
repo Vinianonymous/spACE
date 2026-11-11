@@ -37,7 +37,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="stat-row"><span>ENGINE OUTPUT</span><b id="throttle">45%</b></div>
       <div class="stat-row"><span>BOOST RESERVE</span><b id="boost">100%</b></div>
       <div class="meter"><i id="boost-bar"></i></div>
-      <div class="stat-row system-row"><span>VEXTRA FOCUS <kbd>V</kbd></span><b id="focus-state">READY</b></div>
+      <div class="stat-row system-row"><span><span id="focus-name">VEXTRA FOCUS</span> <kbd>V</kbd></span><b id="focus-state">READY</b></div>
       <div class="meter"><i id="focus-bar"></i></div>
       <div class="stat-row system-row"><span>COUNTERMEASURES <kbd>X</kbd></span><b id="flare-state">READY</b></div>
     </aside>
@@ -125,7 +125,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <span>Track mission objective</span><b>G</b>
         <span>Padlock target camera</span><b>HOLD C</b>
         <span>Recenter mouse yoke</span><b>Z</b>
-        <span>Countermeasures / Vextra Focus</span><b>X / V</b>
+        <span>Countermeasures / equipped ability</span><b>X / V</b>
         <span>Pause / resume</span><b>ESC</b>
       </div>
       <p class="manual-note" id="mouse-description">Relative flight captures the cursor: move the mouse to pitch and yaw; stop moving to fly straight. Escape releases the cursor and pauses. Click Launch or Resume to recapture. Screen-position steering is available below as a fallback.</p>
@@ -134,7 +134,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="settings-row"><label for="invert-pitch">INVERT MOUSE PITCH</label><input id="invert-pitch" type="checkbox" /></div>
       <p class="manual-note" id="settings-status" role="status">Pilot preferences save in this browser. Progress exports do not include preferences; clearing browser data removes both.</p>
       <details class="bindings"><summary>REMAP KEYBOARD CONTROLS</summary><p class="manual-note">Select an action, then press its new key. Escape cancels. H (manual), Escape (pause), and arrow steering remain fixed. Use Reset to restore defaults.</p><div id="binding-list"></div><button id="reset-bindings" class="secondary-button">RESET KEYBOARD DEFAULTS</button></details>
-      <p class="manual-note">Ship handling, shields, weapons, heat recovery, lock acquisition, and ammunition follow your saved hangar loadout. Guided racks carry 24 rounds; heavy torpedoes carry eight and track more slowly. The free Kestrel loadout remains viable. Countermeasures recharge in eight seconds; Focus lasts five seconds, then recharges for 30. Scenery is non-collidable. The proving ground has no incoming fire or rewards.</p>
+      <p class="manual-note">Ship handling, shields, weapons, heat recovery, lock acquisition, and ammunition follow your saved hangar loadout. Guided racks carry 24 rounds; heavy torpedoes carry eight and track more slowly. The free Kestrel loadout remains viable. Countermeasures recharge in eight seconds. Open Hangar → Tech Tree to acquire ships, parts, upgrades, and an optional Vextra Focus replacement; press V to activate your equipped ability. First Light teaches the original Focus before switching to your equipped ability for the raid. Scenery is non-collidable. The proving ground has no incoming fire or rewards.</p>
       <p class="manual-note">The lit 3D arrow uses the camera’s current rotation to point to your target. During padlock it instead shows your ship’s pitch, yaw, and bank relative to the target-facing view; align the arrow into the target to line up your nose. Green is close (≤350 m), red is far (≥1,600 m), with numeric range. Hold C to orbit the camera around your ship toward the target, keeping your ship in frame. Flight axes and weapon direction never follow the camera.</p>
       <p class="manual-note">G tracks convoy, salvage, depot, or command-vessel navigation; Tab returns to hostile selection. Protected objectives can fail a sortie when destroyed. Optional caches never block success. In Survival, run tokens buy six skills between waves; no token or skill persists after the run, and every tenth wave ends with a summoning boss.</p>
       <p class="manual-note">Faction behavior: Trusan raiders below 35% hull overclock their drive, lock onto their target, and detonate after a short fuse—destroy them or break away. Naurae ships charge a blue EMP that drains shields and locks weapons and systems for three seconds; after a blast your systems harden for six seconds, and damaged Naurae teleport to a new firing solution. Warnings appear above the reticle and each wind-up has an audio cue. Exavius flight and weapon handling are unchanged.</p>

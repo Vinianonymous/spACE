@@ -1,4 +1,5 @@
 import { DEFAULT_STATS, type BuildStats } from './catalog';
+import type { AbilityId } from './abilities';
 export type Difficulty = 'standard' | 'assist';
 
 export class Systems {
@@ -16,7 +17,7 @@ export class Systems {
   shots = 0;
   empLockout = 0;
 
-  constructor(public difficulty: Difficulty = 'standard', public stats: BuildStats = DEFAULT_STATS) {
+  constructor(public difficulty: Difficulty = 'standard', public stats: BuildStats = DEFAULT_STATS, public ability: AbilityId = 'focus') {
     this.hull = stats.hull;
     this.shields = stats.shields;
     this.ammo = stats.missileAmmo;
@@ -29,7 +30,7 @@ export class Systems {
     if (this.empLockout < 1e-6) this.empLockout = 0;
     this.damageDelay = Math.max(0, this.damageDelay - dt);
     if (this.damageDelay === 0) this.shields = Math.min(this.stats.shields, this.shields + dt * this.stats.shieldRegen);
-    this.heat = Math.max(0, this.heat - dt * (this.stats.cooling + (this.focusTime > 0 ? 7 : 0)));
+    this.heat = Math.max(0, this.heat - dt * (this.stats.cooling + (this.focusTime > 0 && this.ability === 'focus' ? 7 : 0)));
     if (this.heat < 30) this.overheated = false;
     this.missileCooldown = Math.max(0, this.missileCooldown - dt);
     this.countermeasureCooldown = Math.max(0, this.countermeasureCooldown - dt);
@@ -64,8 +65,23 @@ export class Systems {
 
   focus() {
     if (this.focusTime > 0 || this.focusCooldown > 0 || this.systemsLocked) return false;
-    this.focusTime = 5;
+    if (this.ability === 'phoenix') this.focusCooldown = this.stats.focusCooldown;
+    else this.focusTime = 5;
     return true;
+  }
+
+  salvo(count: number) {
+    if (this.systemsLocked || !Number.isInteger(count) || count < 1 || count > this.ammo) return false;
+    this.ammo -= count;
+    return true;
+  }
+
+  bloodthirstKill() {
+    if (this.ability !== 'bloodthirst' || this.focusTime <= 0) return;
+    const heal = this.stats.hull * 0.15;
+    const hull = Math.min(heal, this.stats.hull - this.hull);
+    this.hull += hull;
+    this.shields = Math.min(this.stats.shields, this.shields + heal - hull);
   }
 
   /** Naurae EMPs strip shields without damaging the hull and lock every weapon system. */

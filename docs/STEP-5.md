@@ -2,6 +2,8 @@
 
 This is a **release-preparation increment**, not a v1.0 release or acceptance of the roadmap gates.
 
+Subsequent gameplay work added the connected hangar technology tree and optional Phoenix, Bloodthirst, and Poison abilities. The save payload is now version 4 under the original key; version-1–3 saves migrate to the free Focus ability without losing owned ships or parts. Existing higher-tier equipment remains owned even if it does not satisfy a new tree prerequisite. See [current rules](../README.md#hangar--phase-3); the original verification numbers below describe the earlier release-preparation increment, not a new release acceptance.
+
 ## Delivered in this increment
 
 - Flight manual settings now include remapping for 17 keyboard flight/combat actions. Click an action and press a physical key; Escape cancels, Reset restores the defaults. Duplicate bindings, browser arrows, Escape, and H are reserved. Fixed Escape (pause), H (manual), and arrow steering remain available as recovery paths. Mouse buttons and existing mouse-mode preferences are unchanged.
