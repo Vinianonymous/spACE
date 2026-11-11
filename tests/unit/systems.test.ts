@@ -87,4 +87,26 @@ describe('combat systems', () => {
     expect(systems.hull).toBe(100);
     expect(systems.empLockout).toBe(3);
   });
+  it('braking speeds shield repair, weapon cooling, countermeasures and skill recharge, and reloads missiles', () => {
+    const normal = new Systems(), braking = new Systems();
+    for (const systems of [normal, braking]) {
+      systems.damage(20); systems.cannon(); systems.missile(); systems.countermeasures();
+      systems.focus(); systems.update(5);
+      systems.damage(20);
+      systems.heat = 75;
+      systems.countermeasureCooldown = 8;
+      systems.missileCooldown = 7;
+    }
+    normal.update(4);
+    braking.update(4, true);
+    expect(braking.shields).toBeGreaterThan(normal.shields);
+    expect(braking.heat).toBeLessThanOrEqual(normal.heat);
+    expect(braking.countermeasureCooldown).toBeLessThan(normal.countermeasureCooldown);
+    expect(braking.missileCooldown).toBeLessThan(normal.missileCooldown);
+    expect(braking.focusCooldown).toBeLessThan(normal.focusCooldown);
+    expect(braking.ammo).toBe(24);
+    expect(normal.ammo).toBe(23);
+    braking.update(40, true);
+    expect(braking.ammo).toBe(braking.stats.missileAmmo);
+  });
 });

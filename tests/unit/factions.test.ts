@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { Faction } from '../../src/campaign';
 import {
-  EMP_CHARGE_SECONDS, EMP_COOLDOWN_SECONDS, OVERCLOCK_FUSE_SECONDS, OVERCLOCK_RADIUS,
+  EMP_CHARGE_SECONDS, EMP_COOLDOWN_SECONDS, EMP_RANGE, OVERCLOCK_FUSE_SECONDS, OVERCLOCK_RADIUS,
   overclockDamage, tickFaction, type FactionActorState,
 } from '../../src/factions';
 
@@ -14,19 +14,20 @@ const actor = (overrides: Partial<FactionActorState> = {}): FactionActorState =>
 describe('faction combat behavior', () => {
   it('Naurae charge then release a telegraphed EMP only inside range', () => {
     const naurae = actor();
-    expect(tickFaction(naurae, 1 / 60, 800, 800)).toBe('emp-charge');
+    expect(EMP_RANGE).toBe(550);
+    expect(tickFaction(naurae, 1 / 60, EMP_RANGE - 10, EMP_RANGE - 10)).toBe('emp-charge');
     expect(naurae.empCharge).toBeCloseTo(EMP_CHARGE_SECONDS);
-    expect(tickFaction(naurae, EMP_CHARGE_SECONDS, 800, 800)).toBe('emp-blast');
+    expect(tickFaction(naurae, EMP_CHARGE_SECONDS, EMP_RANGE - 10, EMP_RANGE - 10)).toBe('emp-blast');
     expect(naurae.empCooldown).toBeCloseTo(EMP_COOLDOWN_SECONDS);
 
     const far = actor();
-    expect(tickFaction(far, 1 / 60, 1200, 1200)).toBeUndefined();
+    expect(tickFaction(far, 1 / 60, EMP_RANGE + 1, EMP_RANGE + 1)).toBeUndefined();
     expect(far.empCharge).toBe(0);
   });
 
   it('an EMP charge that loses range fizzles without an event', () => {
     const naurae = actor();
-    tickFaction(naurae, 1 / 60, 800, 800);
+    tickFaction(naurae, 1 / 60, EMP_RANGE - 10, EMP_RANGE - 10);
     expect(tickFaction(naurae, EMP_CHARGE_SECONDS, 1200, 1200)).toBeUndefined();
     expect(naurae.empCharge).toBe(0);
     expect(naurae.empCooldown).toBeCloseTo(EMP_COOLDOWN_SECONDS);

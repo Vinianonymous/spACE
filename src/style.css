@@ -63,10 +63,10 @@ h1 em { color: var(--green); font-style: normal; }
 .heading-scale { position: absolute; top: 119px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 19px; font: 9px var(--mono); color: #9caeb1; opacity: 0.65; pointer-events: none; }
 .heading-scale i { height: 8px; width: 1px; background: #849a9d; }
 .heading-scale b { color: var(--green); padding: 5px 9px; border-bottom: 1px solid var(--green); }
-.target-marker { position: absolute; transform: translate(-50%, -50%); width: 68px; height: 58px; border: 1px solid #f2a17c; color: #f2a17c; font: 9px var(--mono); pointer-events: none; }
+.target-marker { position: absolute; transform: translate(-50%, -50%); width: 68px; height: 58px; border: 1px solid #ff7667; color: #ff7667; font: 9px var(--mono); pointer-events: none; }
 .target-marker:before, .target-marker:after { content: ''; position: absolute; top: -3px; width: 5px; height: 5px; background: currentColor; }
 .target-marker:before { left: -3px; } .target-marker:after { right: -3px; }
-.target-marker.locked { border-color: var(--green); color: var(--green); }
+.target-marker.locked { border-color: #ff7667; color: #ff7667; }
 .target-marker span { position: absolute; top: -22px; white-space: nowrap; left: -4px; letter-spacing: 1px; }
 .target-marker small { position: absolute; bottom: -21px; white-space: nowrap; left: -4px; font-size: 9px; }
 .target-guide { position: absolute; left: 50%; top: 72%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 5px; font: 11px var(--mono); letter-spacing: 1px; pointer-events: none; text-shadow: 0 1px 6px #000; }
@@ -159,6 +159,7 @@ body:not(.hud-visible) .padlock-status,
 body:not(.hud-visible) .mouse-yoke,
 body:not(.hud-visible) .notice,
 body:not(.hud-visible) .missile-warning,
+body:not(.hud-visible) .missile-compass,
 body:not(.hud-visible) .threat-warning,
 body:not(.hud-visible) .objective-marker,
 body:not(.hud-visible) .boss-status,
@@ -262,7 +263,11 @@ body:not(.hud-visible) .statusbar { visibility: hidden; }
 .squad-list { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; font: 8px var(--mono); color: #99c6ae; }
 #radar { margin-top: 16px; border: 1px solid #7ea99e33; background: #06121988; }
 .missile-warning { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); color: #ffd4b1; border: 1px solid #ff885c; background: #4c1a13d9; padding: 12px 20px; font: 10px var(--mono); letter-spacing: 1px; pointer-events: none; }
-.threat-warning { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); padding: 10px 18px; border: 1px solid #8dcfff; background: #0a2033e6; color: #b9e4ff; font: 10px var(--mono); letter-spacing: 1px; pointer-events: none; animation: threat-pulse 0.7s ease-in-out infinite alternate; }
+.missile-compass { position: absolute; width: 136px; height: 136px; transform: translate(-50%, -50%); border: 1px solid #ff6659aa; border-radius: 50%; box-shadow: 0 0 16px #ff665933, inset 0 0 16px #ff665922; color: #ff7667; pointer-events: none; }
+.missile-compass > span { position: absolute; left: 50%; top: -17px; transform: translateX(-50%); white-space: nowrap; font: 7px var(--mono); letter-spacing: 1px; color: #ffad9e; text-shadow: 0 1px 4px #000; }
+.missile-bearing { position: absolute; left: 50%; top: 50%; color: #ff7667; font: 18px var(--mono); line-height: 1; transform-origin: center; text-shadow: 0 0 8px #ff3322; }
+.brake-active #drive-state { color: #ffcb85; }
+.threat-warning { position: absolute; left: 50%; top: 34%; transform: translateX(-50%); padding: 10px 18px; border: 1px solid #ff7667; background: #3b1b12e6; color: #ffd3b7; font: 10px var(--mono); letter-spacing: 1px; pointer-events: none; animation: threat-pulse 0.7s ease-in-out infinite alternate; }
 .threat-warning[data-kind='overclock'] { border-color: #ff9868; background: #3b1b12e6; color: #ffd3b7; }
 @keyframes threat-pulse { from { opacity: 0.62; } to { opacity: 1; } }
 .emp-lockout .vignette { box-shadow: inset 0 0 120px #58b6ff55; }
@@ -278,11 +283,10 @@ body:not(.hud-visible) .statusbar { visibility: hidden; }
 .operation-active .coordinate { display: none; }
 .operation-active #radar { height: 55px; width: 90px; }
 .objective-marker { position: absolute; transform: translate(-50%, 28px); border-top: 1px solid #baff8088; padding: 6px; background: #0c1a2499; color: #baff80; font: 8px var(--mono); pointer-events: none; }
-.target-marker[data-faction='naurae']:not(.locked) { border-color: #8dcfff; color: #8dcfff; }
 .target-marker[data-faction='exavius'] { border-color: var(--green); color: var(--green); }
-.boss-status { position: absolute; left: 50%; top: 19%; width: 340px; max-width: 40vw; transform: translateX(-50%); text-align: center; font: 9px var(--mono); color: #9ed9ff; letter-spacing: 1px; pointer-events: none; background: #07121dcc; padding: 10px; }
+.boss-status { position: absolute; left: 50%; top: 19%; width: 340px; max-width: 40vw; transform: translateX(-50%); text-align: center; font: 9px var(--mono); color: #ff7667; letter-spacing: 1px; pointer-events: none; background: #07121dcc; padding: 10px; }
 .boss-status b { display: block; margin: 8px 0; font-size: 8px; color: #c6d5df; font-weight: normal; }
-.boss-status .meter i { background: #8dcfff; }
+.boss-status .meter i { background: #ff7667; }
 .campaign-card { display: flex; flex-direction: column; gap: 10px; width: 100%; padding: 14px; margin: 10px 0; background: #0d1d25; border: 1px solid #baff8044; color: #dbe7df; text-align: left; }
 .campaign-card span, .campaign-card small { font: 8px var(--mono); color: #91adae; }
 .campaign-card b { font-size: 16px; letter-spacing: 1px; }

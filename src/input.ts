@@ -26,7 +26,7 @@ export class Input {
       const editing = event.target instanceof HTMLSelectElement || event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLButtonElement;
       if (editing && event.code !== 'Escape') return;
-      if ((this.active && Object.values(this.bindings).includes(event.code)) || ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
+      if ((this.active && (Object.values(this.bindings).includes(event.code) || event.code === 'ControlLeft' || event.code === 'ControlRight')) || ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
       if (!event.repeat) {
         if (event.code === 'Escape') this.onPause();
         if (this.active && event.code === this.bindings.target) this.onTarget();
@@ -113,6 +113,7 @@ export class Input {
       roll: Math.max(-1, Math.min(1, axis([this.bindings.rollRight], [this.bindings.rollLeft]) + mouse.roll)),
       throttle: axis([this.bindings.throttleUp], [this.bindings.throttleDown]),
       boost: this.keys.has(this.bindings.boost) || (this.bindings.boost === 'ShiftLeft' && !Object.values(this.bindings).includes('ShiftRight') && this.keys.has('ShiftRight')),
+      brake: this.keys.has('ControlLeft') || this.keys.has('ControlRight'),
     };
   }
 }

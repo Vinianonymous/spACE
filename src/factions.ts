@@ -1,7 +1,7 @@
 import type { Faction, TargetKind } from './campaign';
 
 /** Naurae electronic warfare: a telegraphed EMP that strips shields and locks systems. */
-export const EMP_RANGE = 950;
+export const EMP_RANGE = 550;
 export const EMP_CHARGE_SECONDS = 1.6;
 export const EMP_COOLDOWN_SECONDS = 14;
 export const EMP_SHIELD_DRAIN = 45;

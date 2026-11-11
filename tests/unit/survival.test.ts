@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_STATS } from '../../src/catalog';
-import { SKILLS, Survival, survivalStats } from '../../src/survival';
+import { SKILLS, Survival, survivalCredits, survivalStats } from '../../src/survival';
 
 function clearOrdinaryWave(run: Survival) { run.drain(); run.update(0.1, 0, false, 0); }
 describe('wave survival run state', () => {
@@ -17,11 +17,24 @@ describe('wave survival run state', () => {
     expect(() => run.buy('arc')).toThrow('between waves');
     clearOrdinaryWave(run);
     expect(run.phase).toBe('intermission'); expect(run.tokens).toBe(2);
+    expect(run.drain()).toContainEqual({ type: 'intermission', earned: 2, credits: 100 });
     run.update(100, 0, false, 0); expect(run.tokens).toBe(2);
     run.buy('arc'); expect(run.skills.arc).toBe(1); expect(run.tokens).toBe(0);
     expect(() => run.buy('arc')).toThrow('Insufficient');
     expect(run.skills.arc).toBe(1); expect(run.tokens).toBe(0);
     run.next(); expect(run.wave).toBe(2); expect(run.skills.arc).toBe(1);
+  });
+  it('grants bounded, larger permanent credit payouts only on completed waves', () => {
+    expect(survivalCredits(1)).toBe(100);
+    expect(survivalCredits(10)).toBe(975);
+    expect(survivalCredits(100)).toBe(1800);
+    const run = new Survival();
+    run.drain(); run.update(30, 1, false, 1);
+    expect(run.drain()).toEqual([]);
+    clearOrdinaryWave(run);
+    expect(run.drain()).toContainEqual({ type: 'intermission', earned: 2, credits: 100 });
+    run.update(10, 0, false, 0);
+    expect(run.drain()).toEqual([]);
   });
 
   it('allows saving tokens for later waves without purchasing', () => {

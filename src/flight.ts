@@ -12,6 +12,7 @@ export interface FlightInput {
   roll: number;
   throttle: number;
   boost: boolean;
+  brake?: boolean;
 }
 
 export class Flight {
@@ -21,19 +22,22 @@ export class Flight {
   speed = 80;
   boost = 100;
   boosting = false;
+  braking = false;
 
   constructor(public stats: BuildStats = DEFAULT_STATS) { this.boost = stats.boostCapacity; }
 
   update(input: FlightInput, dt: number) {
     this.throttle = MathUtils.clamp(this.throttle + input.throttle * dt * 0.35, 0, 1);
-    this.boosting = input.boost && this.boost > 2;
+    this.braking = !!input.brake;
+    this.boosting = !this.braking && input.boost && this.boost > 2;
     this.boost = MathUtils.clamp(this.boost + (this.boosting ? -26 : 14) * dt, 0, this.stats.boostCapacity);
-    const targetSpeed = this.boosting ? this.stats.boostSpeed : MathUtils.lerp(40, this.stats.topSpeed, this.throttle);
-    this.speed = MathUtils.damp(this.speed, targetSpeed, this.stats.acceleration, dt);
+    const targetSpeed = this.braking ? 18 : this.boosting ? this.stats.boostSpeed : MathUtils.lerp(40, this.stats.topSpeed, this.throttle);
+    this.speed = MathUtils.damp(this.speed, targetSpeed, this.braking ? this.stats.acceleration * 3 : this.stats.acceleration, dt);
+    const turn = this.braking ? 1.6 : 1;
     // Local-axis rotation keeps pitch and yaw consistent after rolling.
-    const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -input.yaw * dt * this.stats.turnRate);
-    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), input.pitch * dt * this.stats.turnRate));
-    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -input.roll * dt * this.stats.rollRate));
+    const delta = new Quaternion().setFromAxisAngle(new Vector3(0, 1, 0), -input.yaw * dt * this.stats.turnRate * turn);
+    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), input.pitch * dt * this.stats.turnRate * turn));
+    delta.multiply(new Quaternion().setFromAxisAngle(new Vector3(0, 0, 1), -input.roll * dt * this.stats.rollRate * turn));
     this.rotation.multiply(delta).normalize();
     this.position.addScaledVector(FORWARD.clone().applyQuaternion(this.rotation), this.speed * dt);
     if (this.position.length() > 5500) {

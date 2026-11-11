@@ -142,7 +142,7 @@ describe('inventory transactions and save compatibility', () => {
     const old = { version: 1, credits: 4321, mission2Unlocked: true, completedRuns: ['old-run'], lastResult: { id: 'old-run', credits: 2000, seconds: 90 } };
     local.setItem(PROGRESS_KEY, JSON.stringify(old));
     const store = new ProgressStore(local);
-    expect(store.data.version).toBe(4);
+    expect(store.data.version).toBe(5);
     expect(store.data.credits).toBe(4321);
     expect(store.complete('old-run', 2000, 90)).toBe(false);
     expect(store.data.lastResult).toEqual({ ...old.lastResult, missionId: 1 });

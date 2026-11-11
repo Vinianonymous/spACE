@@ -2,7 +2,7 @@
 
 A browser-based, pixelated 3D arcade space-combat prototype set above Mars in 2256. Fly as **Lion**, Tetragon’s experimental rookie pilot, in Exavius’s EX-01 Kestrel.
 
-This is the **campaign and Wave Survival prototype with a hangar tech tree**: five sequential, replayable missions, six flyable hulls, ten interchangeable parts, three tiers per part, persistent builds, and three optional Vextra Focus replacements. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is not a fully balanced v1.0 release.
+This is the **campaign and Wave Survival prototype with a hangar tech tree**: eleven sequential, replayable missions across two phases, six flyable hulls, ten interchangeable parts, three tiers per part, persistent builds, and three optional Vextra Focus replacements. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is not a fully balanced v1.0 release.
 
 The flight HUD is visible only during active flight. Title, briefing, hangar, pause, debrief, and failure screens hide the combat readouts instead of leaving them over the menu. Local desktop packaging is documented as an optional path, not a platform change: [desktop packaging tradeoffs](docs/DESKTOP.md).
 
@@ -42,6 +42,7 @@ Alternatively, serve `dist/` on a static HTTPS host. Relative asset URLs support
 | Roll | Q / E |
 | Increase / decrease throttle | R / F |
 | Boost | Hold Shift |
+| Brake / fast-turn / recharge | Hold Ctrl (either side) |
 | Cannon | Space / left click |
 | Guided missile | M / right click, after green target lock |
 | Cycle target | Tab |
@@ -75,14 +76,17 @@ The table lists **default** keyboard bindings. In **H → Remap Keyboard Control
 
 Complete **First Light → Broken Convoy → Silent Geometry → Scavenger’s Crown → Tetragon Rising**. Protect the convoy, recover salvage inside the marked zone, raid the depot, and defend extraction before disabling the final command vessel’s relays, drives, and core. Use **G** to track navigation objectives and **Tab** to select hostiles. Losing a protected objective fails the sortie; optional caches never block completion. Mission Select allows replay of completed sorties.
 
+Phase two continues with **Long March → Lion’s Roar → Supernova → Ghost Signal → Scorched Orbit → Crownfall**. Defend the Pluto fleet, find a concealed laser ship before it fires, strike the Uranus ring factory, boost near the HYPR vector to intercept IronFist, disable the Scourge command link, escort civilians, and defeat the Crown. The HUD shows fleet integrity, HYPR charge, and weapon countdowns; rogue asteroids can strike the fleet. Existing phase-one-complete saves unlock Long March automatically.
+
 Clearing browser data can remove saves. No account or cloud save exists. Scenery remains non-collidable. The proving ground has eight moving targets, no incoming fire, and no rewards. Campaign pacing remains shorter than the PRD targets; balance and human onboarding studies are still open.
 
 ### Faction combat
 
 - **Exavius** flight and weapons are unchanged; Lion’s handling, cannon, missiles, countermeasures, and Focus behave exactly as before.
 - **Trusan** raiders remain opportunistic, but a raider below **35% hull** within 1,800 m overclocks its drive, locks onto its target, and dives at 380 m/s. A 3.2-second fuse ends in a proximity detonation (up to 42 damage, falling off to 35% at the 170 m edge). Destroy it or break away. A self-detonating raider still counts as a destroyed sortie contact and advances mission progress, but does not award player kill credit or Survival siphon healing.
-- **Naurae** ships charge a telegraphed EMP for **1.6 seconds** within 950 m. The blast drains up to 45 shields without damaging hull and locks cannon, missiles, countermeasures, and the equipped ability for **3 seconds**. Lion’s systems then harden for **6 seconds**, so several Naurae cannot chain-lock every weapon. Damaged Naurae at or below **75% integrity** also teleport to a new firing solution on a 12-second cooldown, breaking an existing lock.
+- **Naurae** blue ships charge a telegraphed EMP for **1.6 seconds** within 550 m. The blast drains up to 45 shields without damaging hull and locks cannon, missiles, countermeasures, and the equipped ability for **3 seconds**. Lion’s systems then harden for **6 seconds**, so several Naurae cannot chain-lock every weapon. Damaged Naurae at or below **75% integrity** also teleport to a new firing solution on a 12-second cooldown, breaking an existing lock.
 - The warning strip above the reticle shows the active wind-up and countdown; EMP lockout also tints the reticle and vignette. Generated audio cues distinguish EMP charge, teleport, and overclock. Assist halves the EMP shield drain.
+- Enemy guidance in the HUD is red for both factions. A red ring around Lion’s ship shows ship-relative bearings for incoming missiles; proximity beeps quicken as the nearest missile approaches. Hold Ctrl to brake to 18 m/s and turn 60% faster; while held, heat, cooldowns and shields recover twice as fast, and missile racks replenish one round every four seconds (up to loadout capacity). Brake overrides boost.
 
 ### Performance and quality
 
@@ -92,12 +96,12 @@ The guide renderer updates every other frame and caches its bounds, enemy aiming
 
 ### Wave Survival
 
-Choose **Wave Survival → Start New Run** from the title. Fly your active hangar build against escalating waves. Every cleared ordinary wave awards **2 run tokens**; every tenth wave awards **6**, after defeating its boss and surviving reinforcements. Tokens are not campaign credits.
+Choose **Wave Survival → Start New Run** from the title. Fly your active hangar build against escalating waves. Every cleared ordinary wave awards **2 run tokens**; every tenth wave awards **6**, after defeating its boss and surviving reinforcements. Each cleared wave also immediately saves **75 + 25 × wave** credits (capped at 600; boss waves pay triple). Tokens remain run-only; wave credits can buy hangar equipment without advancing the campaign.
 
 - Spend or save tokens between waves. Six special skills—Arc pulse, Shockwave warheads, Shield siphon, Focus reactor, Thermal shunt, and Ion wake—have three ranks costing **2 / 3 / 4 tokens**.
 - After the regular enemies in waves **10, 20, 30…**, a summoner boss arrives and deploys two drones every eight seconds, subject to the active-ship limit. Killing it stops summons; clear remaining drones to finish.
 - Continuing restores shields, ammunition, boost, and systems, and repairs **25% maximum hull**.
-- **Death, restart, exit, or reload clears all run tokens and skills.** No campaign credits are earned or spent, and saved equipment is unchanged. Runs cannot be resumed after reload.
+- **Death, restart, exit, or reload clears all run tokens and skills.** Credits already earned from cleared waves remain saved; equipment and campaign unlocks are unchanged. Runs cannot be resumed after reload.
 
 See [Survival details](docs/SURVIVAL.md) and [phase-4 evidence](docs/STEP-4.md).
 
@@ -112,7 +116,7 @@ Open **Hangar / Refit** from title, the briefing, or the debrief. Earn credits b
 - **Tech Tree / Research:** The hangar header opens connected ship paths, part acquisition and T2/T3 upgrade nodes, and replacement abilities. Laser is immediately available; Vector drive needs Viper; torpedoes and reinforced shield need Bastion; cooling needs laser. Purchasing and selecting are separate, and locked purchases are rejected even outside the UI. Existing owned hulls and parts stay owned after importing older saves.
 - **Replace Vextra Focus:** Phoenix (Viper, 2,200 CR) launches up to six carried missiles at **distinct** contacts within 1,000 m; no target/ammo means no activation. Bloodthirst (Bastion, 2,200 CR) restores 15% max hull per player kill during its five-second window, with overflow going to shields. Poison (laser, 1,800 CR) tags primary hits during its five-second window for a five-second drain (6 damage/s per stack, up to six per target). Enemy integrity is shown as an outer shield band (30%) and hull (70%); toxin crosses the shield band before hull. Phoenix cools down for 30 seconds from launch; timed abilities cool down for 30 seconds after their window. All replacements use V and obey EMP lockout. Focus remains free and selectable. Survival's token shop is separate.
 - **Real flight effects:** Hull silhouette, speed/handling, boost, hull/shields, recharge, weapon damage/rate/heat, projectile speed, secondary ammunition/tracking, and lock acquisition use the same data as the hangar stat table. The starter’s default stats are preserved.
-- **Save compatibility:** Version-1/2 saves migrate to version 3 with credits, equipment, and reward history retained; legacy mission-2 unlocks grant campaign access through mission 2. Version-1 saves receive starter gear. The original storage key is retained. Survival is never saved. Valid previous data is backed up before writes.
+- **Save compatibility:** Version-1–4 saves migrate to version 5 with credits, equipment, and reward history retained; legacy mission-2 unlocks grant campaign access through mission 2, and completed phase-one saves unlock mission 6. Version-1 saves receive starter gear. The original storage key is retained. Survival is never saved. Valid previous data is backed up before writes.
 - **Export/import:** Export Save downloads JSON. Import Save validates a file (up to 1 MB), previews its contents, and requires explicit replacement confirmation. It replaces, rather than merges, progress. Existing on-disk data is retained in a before-import backup when storage permits. Invalid imports do not mutate current progress or silently reset it. Storage failures keep the session playable with a visible warning; export before closing.
 
 The first mission’s minimum reward covers an upgrade. Viper is affordable after two minimum-reward runs if you save credits, or three after buying the first 500-CR upgrade.

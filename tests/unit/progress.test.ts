@@ -49,4 +49,15 @@ describe('mission reward persistence', () => {
     expect(() => parseProgress(JSON.stringify({ ...freshProgress(), completedRuns: [1] }))).toThrow();
     expect(() => new ProgressStore(storage()).complete('run', -1, 1)).toThrow();
   });
+  it('saves survival credits once per wave without unlocking campaign missions or replacing the last debrief', () => {
+    const local = storage(), store = new ProgressStore(local);
+    store.complete('campaign-run', 1500, 80);
+    const previous = store.data.lastResult;
+    expect(store.awardSurvivalWave('survival-1:wave:1', 100)).toBe(true);
+    expect(store.awardSurvivalWave('survival-1:wave:1', 100)).toBe(false);
+    expect(store.awardSurvivalWave('survival-1:wave:2', 125)).toBe(true);
+    expect(new ProgressStore(local).data).toMatchObject({ credits: 1725, unlockedMission: 2, completedMissions: [1], lastResult: previous });
+    expect(() => store.awardSurvivalWave('wave', -1)).toThrow();
+    expect(() => store.awardSurvivalWave('', 100)).toThrow();
+  });
 });

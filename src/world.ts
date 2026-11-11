@@ -7,6 +7,14 @@ const metal = new THREE.MeshStandardMaterial({ color: 0xb4c4c6, roughness: 0.7, 
 const dark = new THREE.MeshStandardMaterial({ color: 0x263843, roughness: 0.8, metalness: 0.6, flatShading: true });
 const glass = new THREE.MeshStandardMaterial({ color: 0x091c27, emissive: 0x143f4f, roughness: 0.2, metalness: 0.8 });
 const engine = new THREE.MeshBasicMaterial({ color: 0xbaff80 });
+const enemyMetal = new THREE.MeshStandardMaterial({ color: 0xb7473d, roughness: 0.85, flatShading: true });
+const enemyDark = new THREE.MeshStandardMaterial({ color: 0x471f24, roughness: 0.8, metalness: 0.5, flatShading: true });
+const enemyGlass = new THREE.MeshStandardMaterial({ color: 0x571f22, emissive: 0x481113, roughness: 0.3, metalness: 0.7 });
+const enemyGlow = new THREE.MeshBasicMaterial({ color: 0xff6659 });
+const nauraeMetal = new THREE.MeshStandardMaterial({ color: 0x397cae, emissive: 0x0c2947, metalness: 0.7, roughness: 0.5, flatShading: true });
+const nauraeDark = new THREE.MeshStandardMaterial({ color: 0x163451, roughness: 0.7, metalness: 0.6, flatShading: true });
+const nauraeGlow = new THREE.MeshBasicMaterial({ color: 0x72c6ff });
+const beaconGlow = new THREE.MeshBasicMaterial({ color: 0x88cfff });
 
 function box(parent: THREE.Group, size: number[], position: number[], material: THREE.Material) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(...size as [number, number, number]), material);
@@ -15,26 +23,38 @@ function box(parent: THREE.Group, size: number[], position: number[], material: 
   return mesh;
 }
 
+/** A tapered continuation of the fuselage: its rear rectangle matches the hull exactly. */
+function shipNose() {
+  const geometry = new THREE.BufferGeometry();
+  const rear: [number, number, number][] = [[-1.4, -0.8, -4], [1.4, -0.8, -4], [1.4, 0.8, -4], [-1.4, 0.8, -4]];
+  const tip: [number, number, number] = [0, 0, -9];
+  const vertices: number[] = [];
+  for (let i = 0; i < 4; i++) vertices.push(...rear[i], ...tip, ...rear[(i + 1) % 4]);
+  geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+  geometry.setAttribute('uv', new THREE.Float32BufferAttribute(Array.from({ length: 4 }, () => [0, 0, 0.5, 1, 1, 0]).flat(), 2));
+  geometry.setIndex(Array.from({ length: 12 }, (_, index) => index));
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
 export function createShip(enemy = false, variant: ShipId = 'kestrel') {
   const ship = new THREE.Group();
   const colors = { kestrel: 0xb4c4c6, viper: 0x8bb0bd, bastion: 0xa9a18b, specter: 0x777c9c, peregrine: 0x91b5a2, paladin: 0xdbceb6 };
-  const shell = enemy ? new THREE.MeshStandardMaterial({ color: 0x934f3c, roughness: 0.85, flatShading: true }) : variant === 'kestrel' ? metal : new THREE.MeshStandardMaterial({ color: colors[variant], roughness: 0.7, metalness: 0.5, flatShading: true });
+  const shell = enemy ? enemyMetal : variant === 'kestrel' ? metal : new THREE.MeshStandardMaterial({ color: colors[variant], roughness: 0.7, metalness: 0.5, flatShading: true });
+  const trim = enemy ? enemyDark : dark;
+  const exhaust = enemy ? enemyGlow : engine;
   box(ship, [2.8, 1.6, 8], [0, 0, 0], shell);
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(1.55, 5, 4), shell);
-  nose.rotation.x = -Math.PI / 2;
-  nose.rotation.z = Math.PI / 4;
-  nose.position.z = -6;
-  ship.add(nose);
-  box(ship, [1.65, 1.1, 3], [0, 1.15, -1.1], glass);
+  ship.add(new THREE.Mesh(shipNose(), shell));
+  box(ship, [1.65, 1.1, 3], [0, 1.15, -1.1], enemy ? enemyGlass : glass);
   for (const side of [-1, 1]) {
     const wing = box(ship, [7.3, 0.45, 3.5], [side * 4.1, -0.2, 1.7], shell);
     wing.rotation.y = side * -0.28;
-    box(ship, [1.5, 1.7, 5.7], [side * 3.2, 0, 3], dark);
-    box(ship, [0.35, 0.8, 5], [side * 7, 0.3, 1.2], dark);
-    box(ship, [0.8, 0.3, 1.5], [side * 6.6, 0.6, -0.5], engine);
+    box(ship, [1.5, 1.7, 5.7], [side * 3.2, 0, 3], trim);
+    box(ship, [0.35, 0.8, 5], [side * 7, 0.3, 1.2], trim);
+    box(ship, [0.8, 0.3, 1.5], [side * 6.6, 0.6, -0.5], exhaust);
     const fin = box(ship, [0.25, 2.8, 2.8], [side * 3.1, 1.7, 3.5], shell);
     fin.rotation.z = side * -0.3;
-    const glow = box(ship, [1.1, 1.1, 0.25], [side * 3.2, 0, 5.9], engine);
+    const glow = box(ship, [1.1, 1.1, 0.25], [side * 3.2, 0, 5.9], exhaust);
     glow.name = 'engine';
     const flame = new THREE.Mesh(new THREE.ConeGeometry(0.65, 5, 5), new THREE.MeshBasicMaterial({ color: enemy ? 0xff7755 : 0x9bffbb, transparent: true, opacity: 0.6 }));
     flame.rotation.x = Math.PI / 2;
@@ -81,61 +101,85 @@ export function createShip(enemy = false, variant: ShipId = 'kestrel') {
   return ship;
 }
 
-const aiMetal = new THREE.MeshStandardMaterial({ color: 0x495468, emissive: 0x09243a, metalness: 0.7, roughness: 0.5, flatShading: true });
-const aiGlow = new THREE.MeshBasicMaterial({ color: 0x88cfff });
 const vextra = new THREE.MeshStandardMaterial({ color: 0xbaff80, emissive: 0x497b29, roughness: 0.4, flatShading: true });
-const pirateMetal = new THREE.MeshStandardMaterial({ color: 0x8d5140, roughness: 0.9, flatShading: true });
 
-export function createCommandVessel() {
+export function createCommandVessel(faction: Faction = 'naurae') {
   const group = new THREE.Group();
-  box(group, [115, 32, 270], [0, 0, 0], aiMetal);
-  box(group, [48, 65, 160], [0, 15, -10], dark);
+  const hull = faction === 'naurae' ? nauraeMetal : enemyMetal;
+  const trim = faction === 'naurae' ? nauraeDark : enemyDark;
+  const glow = faction === 'naurae' ? nauraeGlow : enemyGlow;
+  box(group, [115, 32, 270], [0, 0, 0], hull);
+  box(group, [48, 65, 160], [0, 15, -10], trim);
   for (const side of [-1, 1]) {
-    const wing = box(group, [100, 10, 150], [side * 100, -5, 20], aiMetal);
+    const wing = box(group, [100, 10, 150], [side * 100, -5, 20], hull);
     wing.rotation.y = side * 0.4;
-    box(group, [10, 18, 190], [side * 75, 6, 10], aiGlow);
-    box(group, [38, 36, 40], [side * 90, 0, 145], dark);
-    box(group, [28, 25, 4], [side * 90, 0, 166], aiGlow);
+    box(group, [10, 18, 190], [side * 75, 6, 10], glow);
+    box(group, [38, 36, 40], [side * 90, 0, 145], trim);
+    box(group, [28, 25, 4], [side * 90, 0, 166], glow);
   }
-  const ring = new THREE.Mesh(new THREE.TorusGeometry(145, 3, 6, 40), aiGlow);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(145, 3, 6, 40), glow);
   ring.rotation.x = Math.PI / 2;
   group.add(ring);
   return group;
 }
 
 export function createActor(faction: Faction, kind: TargetKind) {
-  if (kind === 'boss') { const vessel = createCommandVessel(); vessel.scale.setScalar(0.45); return vessel; }
+  if (kind === 'boss') { const vessel = createCommandVessel(faction); vessel.scale.setScalar(0.45); return vessel; }
+  if (kind === 'asteroid') { const rock = new THREE.Group(); rock.add(new THREE.Mesh(new THREE.IcosahedronGeometry(24, 0), dark)); return rock; }
+  const hull = faction === 'naurae' ? nauraeMetal : enemyMetal;
+  const trim = faction === 'naurae' ? nauraeDark : enemyDark;
+  const glow = faction === 'naurae' ? nauraeGlow : enemyGlow;
+  if (kind === 'transport') {
+    const transport = new THREE.Group();
+    box(transport, [30, 18, 85], [0, 0, 0], hull);
+    for (const side of [-1, 1]) {
+      box(transport, [12, 20, 50], [side * 23, 0, 5], trim);
+      box(transport, [10, 9, 3], [side * 23, 0, 31], glow);
+    }
+    return transport;
+  }
+  if (kind === 'laser') {
+    const ship = createCommandVessel(faction); ship.scale.setScalar(0.55);
+    box(ship, [18, 18, 130], [0, 0, -115], glow);
+    return ship;
+  }
   if (faction === 'trusan' && (kind === 'fighter' || kind === 'heavy')) return createShip(true);
   const group = new THREE.Group();
   if (kind === 'fighter' || kind === 'heavy') {
-    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'heavy' ? 4 : 2.8), aiMetal));
+    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'heavy' ? 4 : 2.8), hull));
     for (let i = 0; i < 4; i++) {
       const angle = i * Math.PI / 2;
-      const fin = box(group, [7, 0.4, 3.5], [Math.cos(angle) * 4, Math.sin(angle) * 4, 0], aiMetal);
+      const fin = box(group, [7, 0.4, 3.5], [Math.cos(angle) * 4, Math.sin(angle) * 4, 0], hull);
       fin.rotation.z = angle;
     }
-    box(group, [1.2, 1.2, 11], [0, 0, 0], aiGlow);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'heavy' ? 6 : 4, 0.18, 4, 12), aiGlow);
+    box(group, [1.2, 1.2, 11], [0, 0, 0], glow);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'heavy' ? 6 : 4, 0.18, 4, 12), glow);
     group.add(ring);
   } else if (kind === 'turret') {
-    box(group, [35, 10, 35], [0, -7, 0], pirateMetal);
-    box(group, [15, 14, 18], [0, 4, 0], dark);
-    box(group, [5, 5, 32], [0, 7, -18], pirateMetal);
+    box(group, [35, 10, 35], [0, -7, 0], hull);
+    box(group, [15, 14, 18], [0, 4, 0], trim);
+    box(group, [5, 5, 32], [0, 7, -18], hull);
   } else if (kind === 'cache') {
-    box(group, [36, 24, 28], [0, 0, 0], pirateMetal);
-    for (const side of [-1, 1]) box(group, [3, 26, 30], [side * 11, 0, 0], vextra);
+    box(group, [36, 24, 28], [0, 0, 0], hull);
+    for (const side of [-1, 1]) box(group, [3, 26, 30], [side * 11, 0, 0], glow);
   } else {
-    group.add(new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'core' ? 23 : 14), faction === 'naurae' ? aiGlow : vextra));
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'core' ? 32 : 22, 2, 6, 16), faction === 'naurae' ? aiMetal : pirateMetal);
+    group.add(kind === 'core' && faction === 'naurae' ? new THREE.Mesh(new THREE.BoxGeometry(44, 44, 44), glow) : new THREE.Mesh(new THREE.OctahedronGeometry(kind === 'core' ? 23 : 14), glow));
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(kind === 'core' ? 32 : 22, 2, 6, 16), hull);
     ring.rotation.x = kind === 'engine' ? 0 : Math.PI / 2;
     group.add(ring);
   }
   return group;
 }
 
-export function createObjective(kind: 'convoy' | 'beacon' | 'depot' | 'extraction') {
+export function createObjective(kind: 'convoy' | 'beacon' | 'depot' | 'extraction' | 'fleet') {
   const group = new THREE.Group();
-  if (kind === 'convoy') {
+  if (kind === 'fleet') {
+    for (const [index, x] of [-180, -60, 60, 180].entries()) {
+      box(group, [45, 30, 170], [x, index % 2 ? -15 : 15, index % 2 ? -75 : 75], metal);
+      box(group, [28, 12, 14], [x, index % 2 ? -15 : 15, index % 2 ? 18 : 168], engine);
+      box(group, [12, 13, 105], [x, index % 2 ? 4 : 34, index % 2 ? -75 : 75], vextra);
+    }
+  } else if (kind === 'convoy') {
     box(group, [18, 14, 85], [0, 0, 0], metal);
     for (const side of [-1, 1]) {
       box(group, [18, 18, 55], [side * 20, 0, 7], dark);
@@ -146,15 +190,36 @@ export function createObjective(kind: 'convoy' | 'beacon' | 'depot' | 'extractio
     group.add(new THREE.Mesh(new THREE.OctahedronGeometry(35), vextra));
     const perimeter = new THREE.Mesh(new THREE.TorusGeometry(650, 1.5, 4, 80), new THREE.MeshBasicMaterial({ color: 0x6bafc3, transparent: true, opacity: 0.45 }));
     perimeter.rotation.x = Math.PI / 2; group.add(perimeter);
-    const ring = new THREE.Mesh(new THREE.TorusGeometry(65, 2, 4, 24), aiGlow); group.add(ring);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(65, 2, 4, 24), beaconGlow); group.add(ring);
   } else {
-    const material = kind === 'depot' ? pirateMetal : metal;
+    const material = kind === 'depot' ? enemyMetal : metal;
     box(group, [240, 35, 140], [0, -25, 0], material);
-    box(group, [60, 100, 65], [0, 20, 0], dark);
+    box(group, [60, 100, 65], [0, 20, 0], kind === 'depot' ? enemyDark : dark);
     for (const side of [-1, 1]) {
-      box(group, [130, 6, 90], [side * 190, -10, 0], kind === 'depot' ? dark : glass);
-      box(group, [10, 40, 10], [side * 110, 0, 30], vextra);
+      box(group, [130, 6, 90], [side * 190, -10, 0], kind === 'depot' ? enemyDark : glass);
+      box(group, [10, 40, 10], [side * 110, 0, 30], kind === 'depot' ? enemyGlow : vextra);
     }
+  }
+  return group;
+}
+
+/** Distant mission-specific landmarks; geometry is decorative, not a collision volume. */
+export function createCampaignScenery(id: number) {
+  const group = new THREE.Group();
+  if (id === 7) {
+    const uranus = new THREE.Mesh(new THREE.IcosahedronGeometry(1050, 3), new THREE.MeshStandardMaterial({ color: 0x80b7ba, roughness: 1, flatShading: true }));
+    uranus.position.set(2600, -900, -5500);
+    group.add(uranus);
+    for (const radius of [1350, 1510, 1700]) {
+      const ring = new THREE.Mesh(new THREE.RingGeometry(radius, radius + 90, 64), new THREE.MeshBasicMaterial({ color: 0xb0a18f, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false }));
+      ring.position.copy(uranus.position);
+      ring.rotation.set(0.4, 0.1, 0.28);
+      group.add(ring);
+    }
+  } else if (id === 6 || id === 11) {
+    const pluto = new THREE.Mesh(new THREE.IcosahedronGeometry(720, 3), new THREE.MeshStandardMaterial({ color: 0xb0a9a1, roughness: 1, flatShading: true }));
+    pluto.position.set(3100, -1100, -6500);
+    group.add(pluto);
   }
   return group;
 }

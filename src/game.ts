@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import { Flight, FORWARD, canLock, lockProgress, segmentHitsSphere } from './flight';
 import { Input } from './input';
 import { Metrics } from './metrics';
-import { createActor, createCommandVessel, createObjective, createShip, createWorld } from './world';
+import { createActor, createCampaignScenery, createCommandVessel, createObjective, createShip, createWorld } from './world';
 import type { MouseMode } from './mouse-flight';
 import { targetGuide } from './target-guide';
+import { missileThreat } from './missile-threat';
 import { CameraRig } from './camera-rig';
 import { GuideRenderer, guideRotation } from './guide-renderer';
 import { Systems } from './systems';
@@ -15,7 +16,7 @@ import { abilityById, contactLayers, phoenixTargets } from './abilities';
 import { BINDING_LABELS, DEFAULT_BINDINGS, PREFS_KEY, bindKey, keyLabel, parsePreferences, type Binding, type Preferences } from './preferences';
 import { Hangar } from './hangar';
 import { DEFAULT_STATS, buildStats, fittingIssues, partById, shipById, type ShipId } from './catalog';
-import { CAMPAIGN, Operation, missionById, missionReward, type CampaignId, type Faction, type SpawnSpec, type TargetKind } from './campaign';
+import { CAMPAIGN, LAST_MISSION, Operation, missionById, missionReward, type CampaignId, type Faction, type SpawnSpec, type TargetKind } from './campaign';
 import { SKILLS, Survival, survivalStats, type SkillId } from './survival';
 import { EMP_RANGE, EMP_SHIELD_DRAIN, EMP_SUPPRESSION_SECONDS, OVERCLOCK_SPEED, TELEPORT_MAX_RANGE, TELEPORT_MIN_RANGE, overclockDamage, tickFaction } from './factions';
 
@@ -94,7 +95,8 @@ export class Game {
   private pendingStage?: MissionStage;
   private damageUntil = 0;
   private pausedAt = 0;
-  private enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff8765 });
+  private enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff6659 });
+  private nauraeMaterial = new THREE.MeshBasicMaterial({ color: 0x72c6ff });
   private allyMaterial = new THREE.MeshBasicMaterial({ color: 0x80d9e8 });
   private build = DEFAULT_STATS;
   private hangar: Hangar;
@@ -106,6 +108,7 @@ export class Game {
   private baseBuild = DEFAULT_STATS;
   private objectiveSelected = false;
   private objectiveMesh?: THREE.Group;
+  private campaignScenery?: THREE.Group;
   private commandVessel?: THREE.Group;
   private scenarioCache = new Map<number, THREE.Group>();
   private actorModels = new Map<string, THREE.Group[]>();
@@ -115,7 +118,8 @@ export class Game {
   private ionTimer = 0;
   private empSuppressedUntil = 0;
   private radioHoldUntil = 0;
-  private aiMaterial = new THREE.MeshBasicMaterial({ color: 0x8dcfff });
+  private nextMissileBeep = 0;
+  private survivalCreditsEarned = 0;
 
   constructor() {
     const canvas = $<HTMLCanvasElement>('viewport');
@@ -268,7 +272,7 @@ export class Game {
     $('launch').onclick = () => this.progress.data.campaignComplete ? this.openCampaign() : this.openBriefing(this.progress.data.unlockedMission);
     $('campaign-button').onclick = () => this.openCampaign();
     $('campaign-close').onclick = () => $<HTMLDialogElement>('campaign-select').close();
-    $('next-mission').onclick = () => this.campaignId < 5 ? this.openBriefing((this.campaignId + 1) as CampaignId) : this.openCampaign();
+    $('next-mission').onclick = () => this.campaignId < LAST_MISSION ? this.openBriefing((this.campaignId + 1) as CampaignId) : this.openCampaign();
     $('survival-button').onclick = () => $<HTMLDialogElement>('survival-briefing').showModal();
     $('survival-cancel').onclick = () => $<HTMLDialogElement>('survival-briefing').close();
     $('survival-start').onclick = () => { $<HTMLDialogElement>('survival-briefing').close(); this.start('survival'); };
@@ -364,7 +368,7 @@ export class Game {
 
   private openCampaign() {
     const data = this.progress.data;
-    $('campaign-status').textContent = data.campaignComplete ? 'LOCAL OPERATION WON. All five missions remain replayable with every owned ship.' : `Mission ${data.unlockedMission} available. Complete missions in order; completed missions remain replayable.`;
+    $('campaign-status').textContent = data.campaignComplete ? 'CAMPAIGN WON. All eleven missions remain replayable with every owned ship.' : `Mission ${data.unlockedMission} available. Complete missions in order; completed missions remain replayable.`;
     $('campaign-missions').innerHTML = CAMPAIGN.map((mission) => `<button id="mission-${mission.id}" class="campaign-card" data-mission="${mission.id}" ${mission.id > data.unlockedMission ? 'disabled' : ''}><span>0${mission.id} / ${mission.sector.toUpperCase()}</span><b>${mission.title.toUpperCase()}</b><small>${data.completedMissions.includes(mission.id) ? 'COMPLETED / REPLAY' : mission.id <= data.unlockedMission ? 'AVAILABLE' : 'LOCKED'} · ${mission.baseReward.toLocaleString()} CR BASE</small></button>`).join('');
     for (const button of document.querySelectorAll<HTMLButtonElement>('[data-mission]')) button.onclick = () => { $<HTMLDialogElement>('campaign-select').close(); this.openBriefing(Number(button.dataset.mission) as CampaignId); };
     $<HTMLDialogElement>('campaign-select').showModal();
@@ -387,6 +391,8 @@ export class Game {
   }
 
   private clearScenario() {
+    if (this.campaignScenery) this.scene.remove(this.campaignScenery);
+    this.campaignScenery = undefined;
     if (this.objectiveMesh) this.scene.remove(this.objectiveMesh);
     this.objectiveMesh = undefined;
     if (this.commandVessel) { this.commandVessel.visible = false; this.scene.remove(this.commandVessel); }
@@ -398,8 +404,10 @@ export class Game {
 
   private setupOperation(id: Exclude<CampaignId, 1>) {
     this.operation = new Operation(id);
+    this.campaignScenery = createCampaignScenery(id);
+    this.scene.add(this.campaignScenery);
     let objective = this.scenarioCache.get(id);
-    if (!objective) { objective = createObjective(id === 2 ? 'convoy' : id === 3 ? 'beacon' : id === 4 ? 'depot' : 'extraction'); this.scenarioCache.set(id, objective); }
+    if (!objective) { objective = createObjective(id === 2 || id === 10 ? 'convoy' : id === 6 ? 'fleet' : id === 3 || id === 8 ? 'beacon' : id === 4 || id === 7 || id === 9 || id === 11 ? 'depot' : 'extraction'); this.scenarioCache.set(id, objective); }
     this.objectiveMesh = objective;
     objective.visible = true;
     objective.position.set(...this.operation.objectivePosition);
@@ -433,9 +441,9 @@ export class Game {
       mesh.position.copy(origin); this.scene.add(mesh);
       const id = ++this.actorSerial;
       this.drones.push({ mesh, origin, health: spec.health, maxHealth: spec.health, phase: id * 1.3, id,
-        hostile: ['fighter', 'heavy', 'turret', 'boss'].includes(spec.kind), fireTimer: spec.faction === 'naurae' ? 6 : 6 + id % 4,
+        hostile: ['fighter', 'heavy', 'turret', 'boss', 'laser'].includes(spec.kind), fireTimer: spec.faction === 'naurae' ? 6 : 6 + id % 4,
         missileTimer: 12 + id % 6, faction: spec.faction, kind: spec.kind, label: spec.label, required: spec.required,
-        radius: spec.kind === 'boss' ? 75 : spec.kind === 'core' ? 38 : ['fighter', 'heavy'].includes(spec.kind) ? spec.kind === 'heavy' ? 22 : 15 : 25,
+        radius: spec.kind === 'boss' || spec.kind === 'laser' ? 75 : spec.kind === 'core' ? 38 : ['fighter', 'heavy'].includes(spec.kind) ? spec.kind === 'heavy' ? 22 : 15 : 25,
         attacksObjective: !!spec.attacksObjective, lastVolley: Math.floor(this.elapsed / 7),
         empCooldown: spec.faction === 'naurae' ? 5 + id % 4 : 0, empCharge: 0,
         teleportCooldown: spec.faction === 'naurae' ? 8 + id % 6 : 0, overclock: 0, overclockCooldown: 0,
@@ -455,6 +463,13 @@ export class Game {
       else if (event.type === 'phase') {
         $('objective').textContent = event.objective;
         this.notice(event.objective);
+        if (this.operation.id === 8 && event.phase === 'intercept') {
+          // The one-use HYPR drive translates Lion from Mars orbit into the belt.
+          this.flight.position.set(0, 0, 0);
+          for (const shot of this.projectiles) if (shot.side === 'enemy') shot.age = 100;
+          this.explode(this.flight.position, 36);
+          this.audio.tone('teleport');
+        }
         if (this.operation.id === 5 && event.phase === 'relays') {
           if (this.commandVessel) this.commandVessel.visible = true;
           if (this.objectiveMesh) this.objectiveMesh.visible = false;
@@ -488,9 +503,12 @@ export class Game {
         if (event.summon) { this.audio.tone('warning'); this.notice('SUMMONER DEPLOYING REINFORCEMENTS'); }
       } else if (event.type === 'boss') this.radio('TETRAGON / SURVIVAL CONTROL', `Wave ${this.survival.wave} cleared of regular contacts. Summoner incoming: destroy it to stop its reinforcement ships.`);
       else if (event.type === 'intermission') {
+        this.progress.awardSurvivalWave(`${this.runId}:wave:${this.survival.cleared}`, event.credits);
+        this.survivalCreditsEarned += event.credits;
+        this.updateProgress();
         this.state = 'intermission'; this.input.active = false; this.input.clear(); this.input.releaseMouse();
         $('survival-shop').hidden = false;
-        $('survival-shop-summary').textContent = `Wave ${this.survival.cleared} complete. Earned ${event.earned} run tokens. Skills apply to the next wave and expire at the end of this run. Continue without buying to save tokens.`;
+        $('survival-shop-summary').textContent = `Wave ${this.survival.cleared} complete. Earned ${event.credits} permanent credits and ${event.earned} run tokens. Credits are saved now; skills expire when the run ends. Continue without buying to save tokens.`;
         this.renderSurvivalShop(); $('survival-shop').tabIndex = -1; $('survival-shop').focus();
       }
     }
@@ -546,6 +564,8 @@ export class Game {
     this.ionTimer = 0;
     this.empSuppressedUntil = 0;
     this.commandFire = 0;
+    this.nextMissileBeep = 0;
+    this.survivalCreditsEarned = 0;
     $('radio-transcript').replaceChildren();
     this.wingFire = 0;
     this.audio.start();
@@ -599,7 +619,7 @@ export class Game {
     this.input.active = false;
     this.input.clear();
     this.input.releaseMouse();
-    for (const id of ['briefing-panel', 'pause-panel', 'complete-panel', 'failure-panel', 'survival-shop', 'target-guide', 'target-marker', 'objective-marker', 'missile-warning', 'threat-warning', 'padlock-status', 'boss-status', 'operation-panel', 'survival-hud', 'radar', 'squad-list']) $(id).hidden = true;
+    for (const id of ['briefing-panel', 'pause-panel', 'complete-panel', 'failure-panel', 'survival-shop', 'target-guide', 'target-marker', 'objective-marker', 'missile-warning', 'missile-compass', 'threat-warning', 'padlock-status', 'boss-status', 'operation-panel', 'survival-hud', 'radar', 'squad-list']) $(id).hidden = true;
     $('launch-panel').hidden = false;
     document.body.classList.remove('in-flight', 'focus-active', 'padlock-view', 'damage-flash', 'operation-active', 'boss-active');
     this.flight = new Flight();
@@ -673,11 +693,11 @@ export class Game {
     $('result-reward').textContent = `${reward.toLocaleString()} CR`;
     const mission = missionById(this.campaignId)!;
     $('result-label').textContent = this.mode === 'mission' ? `${mission.title.toUpperCase()} / SECTOR SECURE` : 'PROVING GROUND / EXERCISE COMPLETE';
-    $('complete-title').textContent = this.mode === 'mission' && this.campaignId === 5 ? 'OPERATION SECURED.' : 'NICE FLYING, LION.';
+    $('complete-title').textContent = this.mode === 'mission' && (this.campaignId === 5 || this.campaignId === LAST_MISSION) ? 'OPERATION SECURED.' : 'NICE FLYING, LION.';
     const optional = restored ? this.progress.data.lastResult?.optionalComplete : this.operation?.optionalComplete;
     $('result-story').textContent = this.mode === 'mission' ? `${restored ? 'Previous debrief. Reward already credited. ' : ''}${mission.debrief}${mission.optionalBonus ? ` Optional cache: ${optional ? 'secured' : 'not destroyed; primary mission still complete'}.` : ''}` : 'All training contacts eliminated. Exercises award no credits.';
     $('next-mission').hidden = this.mode !== 'mission';
-    $('next-mission').textContent = this.campaignId < 5 ? `NEXT MISSION / ${missionById(this.campaignId + 1)!.title.toUpperCase()}` : 'CAMPAIGN COMPLETE / MISSION SELECT';
+    $('next-mission').textContent = this.campaignId < LAST_MISSION ? `NEXT MISSION / ${missionById(this.campaignId + 1)!.title.toUpperCase()}` : 'CAMPAIGN COMPLETE / MISSION SELECT';
     $('fly-again').focus();
   }
 
@@ -761,7 +781,7 @@ export class Game {
       $('objective').textContent = 'Signal lost. Restart the sortie or return to title.';
       if (this.mode === 'survival' && this.survival) {
         const run = this.survival;
-        $('failure-reason').textContent = `${run.cleared} waves cleared; ${run.kills} ships destroyed; ${Math.floor(run.cleared / 10)} summoner bosses defeated. All run tokens and skills have expired. Campaign credits and saved loadouts are unchanged.`;
+        $('failure-reason').textContent = `${run.cleared} waves cleared; ${run.kills} ships destroyed; ${Math.floor(run.cleared / 10)} summoner bosses defeated. ${this.survivalCreditsEarned} credits earned and saved from cleared waves. Run tokens and skills have expired; saved loadouts are unchanged.`;
         run.end();
       } else $('failure-reason').textContent = `${reason} No credits awarded. Previously earned credits and saved equipment are safe.`;
       $('survival-shop').hidden = true;
@@ -892,7 +912,7 @@ export class Game {
   }
 
   private enemyMissile(origin: THREE.Vector3, practice = false, victim: 'player' | 'objective' = 'player', faction: Faction = 'trusan') {
-    const mesh = new THREE.Mesh(this.missileGeometry, faction === 'naurae' ? this.aiMaterial : this.enemyMaterial);
+    const mesh = new THREE.Mesh(this.missileGeometry, faction === 'naurae' ? this.nauraeMaterial : this.enemyMaterial);
     mesh.position.copy(origin);
     this.scene.add(mesh);
     const target = victim === 'objective' && this.objectiveMesh ? this.objectiveMesh.position : this.flight.position;
@@ -913,7 +933,19 @@ export class Game {
         }
         continue;
       }
-      if (!drone.hostile) { drone.mesh.rotation.y += dt * 0.15; continue; }
+      if (!drone.hostile) {
+        if (drone.kind === 'asteroid' && this.operation?.id === 6 && this.operation.protectedActive && this.objectiveMesh) {
+          const direction = this.objectiveMesh.position.clone().sub(drone.mesh.position);
+          const distance = direction.length();
+          if (distance > 0) drone.mesh.position.addScaledVector(direction.normalize(), Math.min(48 * dt, distance));
+          drone.mesh.rotation.x += dt * 0.4;
+          if (drone.mesh.position.distanceTo(this.objectiveMesh.position) < 120) {
+            this.operation.damageObjective(110);
+            this.hit(drone, drone.health, false);
+          }
+        } else if (drone.kind !== 'transport') drone.mesh.rotation.y += dt * 0.15;
+        continue;
+      }
       const victim = drone.attacksObjective && this.operation?.protectedActive && this.objectiveMesh ? 'objective' : 'player';
       const target = victim === 'objective' ? this.objectiveMesh!.position : this.flight.position;
       const distanceToTarget = drone.mesh.position.distanceTo(target);
@@ -972,7 +1004,7 @@ export class Game {
         drone.lastVolley = volley;
         const aim = this.scratchAim.copy(target);
         if (victim === 'player') aim.addScaledVector(FORWARD.clone().applyQuaternion(this.flight.rotation), this.flight.speed * distance / 520 * (coordinated ? 0.85 : 0.65));
-        const mesh = new THREE.Mesh(this.laserGeometry, coordinated ? this.aiMaterial : this.enemyMaterial);
+        const mesh = new THREE.Mesh(this.laserGeometry, coordinated ? this.nauraeMaterial : this.enemyMaterial);
         mesh.position.copy(drone.mesh.position);
         const direction = aim.sub(mesh.position).normalize();
         mesh.quaternion.setFromUnitVectors(FORWARD, direction);
@@ -981,7 +1013,7 @@ export class Game {
       }
       if (distance < 1500 && drone.missileTimer <= 0) {
         drone.missileTimer = drone.kind === 'boss' ? 7 : this.operation || this.survival ? 16 + drone.id % 5 : 19 + drone.phase * 2;
-        if (drone.kind !== 'turret') this.enemyMissile(drone.mesh.position, false, victim, drone.faction);
+        if (drone.kind !== 'turret' || drone.label.includes('SAM')) this.enemyMissile(drone.mesh.position, false, victim, drone.faction);
       }
     }
   }
@@ -1151,7 +1183,8 @@ export class Game {
     if (this.operation && this.state === 'flying') {
       const point = new THREE.Vector3(...this.operation.objectivePosition);
       if (this.objectiveMesh && (this.operation.id !== 5 || this.operation.phase === 'extraction')) this.objectiveMesh.position.copy(point);
-      this.operation.update(dt, required, this.flight.position.distanceTo(point));
+      if (this.operation.phase === 'laser') this.operation.discover(this.flight.position.distanceTo(new THREE.Vector3(...this.operation.laserPosition)));
+      this.operation.update(dt, required, this.flight.position.distanceTo(point), this.flight.boosting);
       this.processOperationEvents();
       if (this.operation.id === 5 && ['relays', 'engines', 'command'].includes(this.operation.phase) && this.commandVessel && this.state === 'flying') {
         this.commandFire -= dt;
@@ -1174,16 +1207,18 @@ export class Game {
     $('objective-marker').hidden = true;
     if (op && active) {
       const remaining = this.drones.filter((actor) => actor.required && actor.health > 0).length;
-      const point = new THREE.Vector3(...op.objectivePosition);
+      const point = new THREE.Vector3(...(op.phase === 'laser' && !op.discovered ? op.laserPosition : op.objectivePosition));
       const distance = Math.round(this.flight.position.distanceTo(point));
       $('operation-label').textContent = op.objectiveLabel;
       $('operation-panel').dataset.health = String(op.objectiveHealth);
       $('operation-panel').dataset.progress = String(op.progress);
       $('operation-panel').dataset.distance = String(distance);
       $('operation-panel').dataset.required = String(remaining);
-      $('operation-status').textContent = op.protectedActive ? `HULL ${Math.ceil(op.objectiveHealth)} / ${op.maxObjectiveHealth}` : op.phase === 'salvage' ? `${op.recovery.toFixed(1)} / 45 SECONDS` : `${remaining} PRIMARY CONTACTS`;
-      $('operation-bar').style.width = `${op.protectedActive ? op.objectiveHealth / op.maxObjectiveHealth * 100 : op.phase === 'salvage' ? op.progress * 100 : 100}%`;
-      $('operation-detail').textContent = op.phase === 'escort' ? `Exit ${Math.floor(op.travel * 100)}% · Ambush ${op.wave + 1}/3 · ${distance} m to Aster${op.optionalComplete ? ' · Cache secured' : ''}`
+      $('operation-status').textContent = op.deadline > 0 ? `WEAPON CHARGE ${Math.ceil(op.deadline)}s · ${op.protectedActive ? `FLEET HULL ${Math.ceil(op.objectiveHealth)}` : `${remaining} CONTACTS`}` : op.protectedActive ? `HULL ${Math.ceil(op.objectiveHealth)} / ${op.maxObjectiveHealth}` : op.phase === 'salvage' ? `${op.recovery.toFixed(1)} / 45 SECONDS` : op.phase === 'hypr' ? `HYPR BOOST ${op.recovery.toFixed(1)} / 2 SECONDS` : `${remaining} PRIMARY CONTACTS`;
+      $('operation-bar').style.width = `${op.protectedActive ? op.objectiveHealth / op.maxObjectiveHealth * 100 : op.phase === 'salvage' || op.phase === 'hypr' ? op.progress * 100 : 100}%`;
+      $('operation-detail').textContent = op.phase === 'march' || op.phase === 'evacuation' || op.phase === 'laser' ? `Route ${Math.floor(op.travel * 100)}% · ${op.phase === 'laser' ? op.discovered ? 'LASER SHIP EXPOSED' : 'FIND CRYOGENIC SIGNATURE' : `Ambush ${op.wave + 1}/3`} · ${distance} m`
+        : op.phase === 'hypr' ? `${op.inZone ? 'BOOST TO CHARGE HYPR' : 'APPROACH HYPR VECTOR'} · ${distance} m`
+        : op.phase === 'escort' ? `Exit ${Math.floor(op.travel * 100)}% · Ambush ${op.wave + 1}/3 · ${distance} m to Aster${op.optionalComplete ? ' · Cache secured' : ''}`
         : op.phase === 'salvage' ? `${op.contested ? 'CONTESTED — CLEAR HOSTILES' : !op.inZone ? 'OUT OF RANGE — USE G' : 'RECOVERING VEXTRA'} · ${distance} m`
           : op.phase === 'extraction' ? `Payload ${Math.floor(op.progress * 100)}% · Assault ${op.wave + 1}/2 · ${distance} m`
             : `${distance} m · ${op.optionalComplete ? 'Optional cache secured' : op.id === 4 ? 'Optional cache not required' : 'Follow phase directives'}`;
@@ -1193,7 +1228,7 @@ export class Game {
           $('objective-marker').hidden = false;
           $('objective-marker').style.left = `${(screen.x * 0.5 + 0.5) * 100}%`;
           $('objective-marker').style.top = `${(-screen.y * 0.5 + 0.5) * 100}%`;
-          $('objective-marker').textContent = `${op.id === 2 ? 'ASTER' : op.id === 3 ? 'SALVAGE ZONE' : op.id === 4 ? 'DEPOT' : op.phase === 'extraction' ? 'EXTRACTION' : 'COMMAND VESSEL'} / ${distance} M [G]`;
+          $('objective-marker').textContent = `${op.phase === 'laser' && !op.discovered ? 'CRYOGENIC TRACE' : op.id === 2 ? 'ASTER' : op.id === 3 ? 'SALVAGE ZONE' : op.id === 4 ? 'DEPOT' : op.id === 6 ? 'PLUTO FLEET' : op.id === 7 ? 'RING BASE' : op.id === 8 ? 'HYPR VECTOR' : op.id === 10 ? 'EVACUATION' : op.phase === 'extraction' ? 'EXTRACTION' : 'COMMAND VESSEL'} / ${distance} M [G]`;
         }
       }
     }
@@ -1202,6 +1237,7 @@ export class Game {
     if (run) {
       $('survival-wave').textContent = `WAVE ${run.wave} / ${run.phase === 'boss' ? 'SUMMONER' : 'COMBAT'}`;
       $('survival-tokens').textContent = String(run.tokens);
+      $('survival-credits').textContent = this.survivalCreditsEarned.toLocaleString();
       $('survival-cleared').textContent = String(run.cleared);
       $('survival-equipped').textContent = SKILLS.filter((skill) => run.skills[skill.id] > 0).map((skill) => `${skill.name} ${run.skills[skill.id]}`).join(' / ') || 'NO RUN SKILLS';
       const serialized = JSON.stringify(run.skills);
@@ -1242,6 +1278,8 @@ export class Game {
       // Menu states keep layout boxes but make no flight-HUD writes or projections.
       this.updateOperationHud(false);
       $('missile-warning').hidden = true;
+      $('missile-compass').hidden = true;
+      document.body.classList.remove('brake-active');
       $('threat-warning').hidden = true;
       document.body.dataset.threat = '';
       $('target-guide').hidden = true;
@@ -1277,7 +1315,26 @@ export class Game {
     $('focus-bar').style.width = `${this.systems.focusTime > 0 ? this.systems.focusTime / 5 * 100 : (1 - this.systems.focusCooldown / this.build.focusCooldown) * 100}%`;
     document.body.classList.toggle('focus-active', this.systems.ability === 'focus' && this.systems.focusTime > 0);
     document.body.classList.toggle('damage-flash', performance.now() < this.damageUntil);
-    $('missile-warning').hidden = !this.projectiles.some((shot) => shot.side === 'enemy' && shot.homing && shot.age < 12);
+    const incoming = this.projectiles.filter((shot) => shot.side === 'enemy' && shot.homing && shot.victim !== 'objective' && shot.age < 12);
+    $('missile-warning').hidden = incoming.length === 0;
+    const compass = $('missile-compass');
+    compass.hidden = incoming.length === 0;
+    if (incoming.length) {
+      const shipOnScreen = this.ship.position.clone().project(this.camera);
+      compass.hidden = shipOnScreen.z >= 1;
+      compass.style.left = `${(shipOnScreen.x * 0.5 + 0.5) * 100}%`;
+      compass.style.top = `${(-shipOnScreen.y * 0.5 + 0.5) * 100}%`;
+      const bearings = incoming.map((shot) => missileThreat(this.flight.position, this.flight.rotation, shot.mesh.position))
+        .sort((a, b) => a.distance - b.distance);
+      compass.setAttribute('aria-label', `${bearings.length} incoming missile${bearings.length === 1 ? '' : 's'}; nearest ${Math.round(bearings[0].distance)} meters at ${Math.round(bearings[0].bearing)} degrees ship-relative`);
+      $('missile-bearings').replaceChildren(...bearings.slice(0, 6).map((threat) => {
+        const marker = document.createElement('i');
+        marker.className = 'missile-bearing';
+        marker.textContent = '▲';
+        marker.style.transform = `translate(-50%, -50%) rotate(${threat.bearing}deg) translateY(-68px)`;
+        return marker;
+      }));
+    }
     const empThreat = this.drones.find((actor) => actor.health > 0 && actor.faction === 'naurae' && actor.empCharge > 0);
     const overclockThreat = empThreat ? undefined : this.drones.find((actor) => actor.health > 0 && actor.faction === 'trusan' && actor.overclock > 0);
     const threat = empThreat || overclockThreat;
@@ -1294,7 +1351,8 @@ export class Game {
     $('throttle').textContent = `${Math.round(this.flight.throttle * 100)}%`;
     $('boost').textContent = `${Math.round(this.flight.boost / this.flight.stats.boostCapacity * 100)}%`;
     $('boost-bar').style.width = `${this.flight.boost / this.flight.stats.boostCapacity * 100}%`;
-    $('drive-state').textContent = this.flight.boosting ? '/ BOOST' : '/ CRUISE';
+    $('drive-state').textContent = this.flight.braking ? '/ BRAKE · RECHARGING' : this.flight.boosting ? '/ BOOST' : '/ CRUISE';
+    document.body.classList.toggle('brake-active', this.flight.braking);
     $('lock-bar').style.width = `${this.lock * 100}%`;
     $('lock-status').textContent = locked ? 'EMP LOCKOUT — SYSTEMS OFFLINE' : this.systems.ammo === 0 ? 'RACK EMPTY' : this.systems.missileCooldown > 0 ? `RECHARGING ${this.systems.missileCooldown.toFixed(1)}s` : this.lock === 1 ? `LOCK CONFIRMED [${keyLabel(this.input.bindings.missile)}]` : this.lock > 0 ? `ACQUIRING ${Math.floor(this.lock * 100)}%` : 'SEEKING TARGET';
     $('lock-status').classList.toggle('locked', !locked && this.lock === 1);
@@ -1311,8 +1369,8 @@ export class Game {
     document.body.classList.toggle('padlock-view', padlock);
     if (hasTarget) {
       const guide = targetGuide(this.flight.position, padlock ? this.flight.rotation : this.camera.quaternion, drone.mesh.position);
-      this.guideColor = guide.color;
-      $('target-guide').style.color = guide.color;
+      this.guideColor = drone.faction === 'exavius' ? guide.color : '#ff7667';
+      $('target-guide').style.color = this.guideColor;
       const orientation = guideRotation(this.flight.position, drone.mesh.position, this.camera.quaternion, this.flight.rotation, padlock);
       // Read-only flight-frame bearing complements the camera-relative visual instrument.
       $('target-guide').dataset.flightBearing = drone.mesh.position.clone().sub(this.flight.position).normalize().applyQuaternion(this.flight.rotation.clone().invert()).toArray().join(',');
@@ -1371,6 +1429,16 @@ export class Game {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
+  private updateMissileBeep() {
+    const closest = this.projectiles.filter((shot) => shot.side === 'enemy' && shot.homing && shot.victim !== 'objective' && shot.age < 12)
+      .reduce<Projectile | undefined>((nearest, shot) => !nearest || shot.mesh.position.distanceToSquared(this.flight.position) < nearest.mesh.position.distanceToSquared(this.flight.position) ? shot : nearest, undefined);
+    if (!closest) { this.nextMissileBeep = this.elapsed; return; }
+    if (this.elapsed >= this.nextMissileBeep) {
+      this.audio.tone('proximity');
+      this.nextMissileBeep = this.elapsed + missileThreat(this.flight.position, this.flight.rotation, closest.mesh.position).beepInterval;
+    }
+  }
+
   private drawRadar() {
     const canvas = $<HTMLCanvasElement>('radar');
     const context = canvas.getContext('2d');
@@ -1386,7 +1454,7 @@ export class Game {
       if (selected) { context.strokeStyle = '#e7f3dc'; context.strokeRect(x - 4, y - 4, 8, 8); }
     };
     if (this.mode === 'mission') for (const wingmate of this.wingmates) contact(wingmate.position, '#baff80');
-    for (const drone of this.drones) if (drone.health > 0) contact(drone.mesh.position, drone.faction === 'naurae' ? '#8dcfff' : '#fa9b75', drone === this.drones[this.selected] && !this.objectiveSelected);
+    for (const drone of this.drones) if (drone.health > 0) contact(drone.mesh.position, '#ff7667', drone === this.drones[this.selected] && !this.objectiveSelected);
     const nav = this.navigationMesh(); if (nav && this.operation) contact(nav.position, '#baff80', this.objectiveSelected);
     context.fillStyle = '#e2f3e7'; context.beginPath(); context.moveTo(65, 40); context.lineTo(61, 48); context.lineTo(69, 48); context.fill();
   }
@@ -1407,7 +1475,7 @@ export class Game {
         remaining -= dt;
         this.elapsed += dt;
         this.flight.update(controls, dt);
-        this.systems.update(dt);
+        this.systems.update(dt, this.flight.braking);
         if (this.mode === 'mission' && this.campaignId === 1) {
           if (this.mission.flightCheck(controls)) this.enterStage('cannon');
           if (this.mission.stage === 'focus' && this.mission.focused && this.systems.focusTime === 0) {
@@ -1421,7 +1489,7 @@ export class Game {
         const target = this.drones[this.selected];
         const acquisition = this.build.lockSpeed * (this.systems.ability === 'focus' && this.systems.focusTime > 0 ? 2.5 : 1) * (this.systems.difficulty === 'assist' ? 1.5 : 1);
         this.lock = lockProgress(this.lock, !this.objectiveSelected && !!target && target.health > 0 && canLock(this.flight.position, this.flight.rotation, target.mesh.position, this.build.lockCone), dt * acquisition);
-        this.fireCooldown = Math.max(0, this.fireCooldown - dt);
+        this.fireCooldown = Math.max(0, this.fireCooldown - dt * (this.flight.braking ? 2 : 1));
         if (this.input.fire) this.fireCannon();
         this.updateProjectiles(dt);
         if (this.survival?.skills.ion && this.flight.boosting) {
@@ -1433,6 +1501,7 @@ export class Game {
         if (this.pendingVictory && this.state === 'flying') { this.pendingVictory = false; this.finish(true); }
       }
       this.updateShip(Math.min(rawDt, 0.1));
+      if (this.state === 'flying') this.updateMissileBeep();
     } else if (this.state === 'standby' || this.state === 'briefing') {
       this.ship.rotation.z = Math.sin(time * 0.0003) * 0.08;
       this.ship.position.y = Math.sin(time * 0.0005) * 0.5;

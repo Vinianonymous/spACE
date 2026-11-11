@@ -16,6 +16,7 @@ export class Systems {
   damageDelay = 0;
   shots = 0;
   empLockout = 0;
+  ammoReloadProgress = 0;
 
   constructor(public difficulty: Difficulty = 'standard', public stats: BuildStats = DEFAULT_STATS, public ability: AbilityId = 'focus') {
     this.hull = stats.hull;
@@ -25,20 +26,29 @@ export class Systems {
 
   get systemsLocked() { return this.empLockout > 0; }
 
-  update(dt: number) {
+  update(dt: number, braking = false) {
+    const recovery = braking ? 2 : 1;
     this.empLockout = Math.max(0, this.empLockout - dt);
     if (this.empLockout < 1e-6) this.empLockout = 0;
-    this.damageDelay = Math.max(0, this.damageDelay - dt);
-    if (this.damageDelay === 0) this.shields = Math.min(this.stats.shields, this.shields + dt * this.stats.shieldRegen);
-    this.heat = Math.max(0, this.heat - dt * (this.stats.cooling + (this.focusTime > 0 && this.ability === 'focus' ? 7 : 0)));
+    this.damageDelay = Math.max(0, this.damageDelay - dt * recovery);
+    if (this.damageDelay === 0) this.shields = Math.min(this.stats.shields, this.shields + dt * this.stats.shieldRegen * recovery);
+    this.heat = Math.max(0, this.heat - dt * recovery * (this.stats.cooling + (this.focusTime > 0 && this.ability === 'focus' ? 7 : 0)));
     if (this.heat < 30) this.overheated = false;
-    this.missileCooldown = Math.max(0, this.missileCooldown - dt);
-    this.countermeasureCooldown = Math.max(0, this.countermeasureCooldown - dt);
+    this.missileCooldown = Math.max(0, this.missileCooldown - dt * recovery);
+    this.countermeasureCooldown = Math.max(0, this.countermeasureCooldown - dt * recovery);
+    if (braking && this.ammo < this.stats.missileAmmo && !this.systemsLocked) {
+      this.ammoReloadProgress += dt;
+      if (this.ammoReloadProgress >= 4) {
+        this.ammo = Math.min(this.stats.missileAmmo, this.ammo + Math.floor(this.ammoReloadProgress / 4));
+        this.ammoReloadProgress %= 4;
+      }
+    }
+    if (this.ammo >= this.stats.missileAmmo) this.ammoReloadProgress = 0;
     this.flareTime = Math.max(0, this.flareTime - dt);
     if (this.focusTime > 0) {
       this.focusTime = Math.max(0, this.focusTime - dt);
       if (this.focusTime === 0) this.focusCooldown = this.stats.focusCooldown;
-    } else this.focusCooldown = Math.max(0, this.focusCooldown - dt);
+    } else this.focusCooldown = Math.max(0, this.focusCooldown - dt * recovery);
   }
 
   cannon() {

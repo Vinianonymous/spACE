@@ -38,6 +38,17 @@ describe('arcade flight', () => {
     flight.update(neutral, 1);
     expect(flight.boost).toBe(88);
   });
+  it('brakes even while boosting, slows promptly, and turns faster without changing throttle', () => {
+    const cruise = new Flight(), brake = new Flight();
+    cruise.update({ ...neutral, yaw: 1 }, 0.25);
+    brake.update({ ...neutral, yaw: 1, brake: true, boost: true }, 0.25);
+    expect(brake.braking).toBe(true);
+    expect(brake.boosting).toBe(false);
+    expect(brake.speed).toBeLessThan(cruise.speed);
+    expect(brake.rotation.angleTo(new Quaternion())).toBeGreaterThan(cruise.rotation.angleTo(new Quaternion()));
+    expect(brake.throttle).toBe(cruise.throttle);
+    brake.update(neutral, 0.1); expect(brake.braking).toBe(false);
+  });
 
   it('corrects towards the play area beyond the sector boundary', () => {
     const flight = new Flight();

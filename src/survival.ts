@@ -10,7 +10,10 @@ export const SKILLS = [
   { id: 'ion', name: 'Ion wake', description: 'While boosting, deal 12 damage per rank every 0.5 seconds to enemies within 110 m.', cost: 2 },
 ] as const;
 export type SkillId = typeof SKILLS[number]['id'];
-export type SurvivalEvent = { type: 'spawn'; actors: SpawnSpec[]; summon?: boolean } | { type: 'boss' } | { type: 'intermission'; earned: number };
+export type SurvivalEvent = { type: 'spawn'; actors: SpawnSpec[]; summon?: boolean } | { type: 'boss' } | { type: 'intermission'; earned: number; credits: number };
+
+/** Permanent credits, separate from disposable run tokens; capped for endless waves. */
+export const survivalCredits = (wave: number) => Math.min(600, 75 + wave * 25) * (wave % 10 === 0 ? 3 : 1);
 
 /** This entire object is disposable run state. It never reads or writes campaign storage. */
 export class Survival {
@@ -57,7 +60,7 @@ export class Survival {
       const earned = this.wave % 10 === 0 ? 6 : 2;
       this.tokens += earned;
       this.phase = 'intermission';
-      this.events.push({ type: 'intermission', earned });
+      this.events.push({ type: 'intermission', earned, credits: survivalCredits(this.wave) });
       return;
     }
     if (this.phase === 'boss' && bossAlive) {
