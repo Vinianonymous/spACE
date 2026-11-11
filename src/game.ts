@@ -11,6 +11,7 @@ import { Systems } from './systems';
 import { ProgressStore } from './progress';
 import { LESSONS, Mission, type MissionStage } from './mission';
 import { FlightAudio } from './audio';
+import { BINDING_LABELS, DEFAULT_BINDINGS, PREFS_KEY, bindKey, keyLabel, parsePreferences, type Binding, type Preferences } from './preferences';
 import { Hangar } from './hangar';
 import { DEFAULT_STATS, buildStats, fittingIssues, partById, shipById, type ShipId } from './catalog';
 import { CAMPAIGN, Operation, missionById, missionReward, type CampaignId, type Faction, type SpawnSpec, type TargetKind } from './campaign';
@@ -81,6 +82,7 @@ export class Game {
   private systems = new Systems();
   private progress: ProgressStore;
   private audio = new FlightAudio();
+  private preferences: Preferences = parsePreferences(null);
   private runId = '';
   private cameraRig = new CameraRig();
   private guide = new GuideRenderer();
@@ -147,6 +149,74 @@ export class Game {
     };
     this.resetDrones();
     this.input = new Input(canvas);
+    try { this.preferences = parsePreferences(localStorage.getItem(PREFS_KEY)); } catch { /* Preferences are session-only. */ }
+    this.input.bindings = { ...this.preferences.bindings };
+    const savePreferences = () => {
+      try { localStorage.setItem(PREFS_KEY, JSON.stringify(this.preferences)); $('settings-status').textContent = 'Pilot preferences saved in this browser.'; }
+      catch { $('settings-status').textContent = 'Storage unavailable — pilot preferences apply for this session only.'; }
+    };
+    const applyPreferences = () => {
+      this.input.bindings = { ...this.preferences.bindings };
+      this.input.clear(); // A held old binding must not survive a remap.
+      this.audio.volume = this.preferences.volume;
+      document.body.classList.toggle('radio-subtitles-off', !this.preferences.subtitles);
+      document.body.classList.toggle('reduced-effects', this.preferences.reducedEffects);
+      document.documentElement.style.setProperty('--hud-scale', String(this.preferences.hudScale));
+      $<HTMLInputElement>('audio-volume').value = String(this.preferences.volume);
+      $<HTMLInputElement>('subtitles').checked = this.preferences.subtitles;
+      $<HTMLSelectElement>('hud-scale').value = String(this.preferences.hudScale);
+      $<HTMLInputElement>('reduced-effects').checked = this.preferences.reducedEffects;
+      const keys = this.preferences.bindings;
+      document.querySelectorAll('.system-row kbd').forEach((node, index) => { node.textContent = keyLabel(index === 0 ? keys.focus : keys.countermeasures); });
+      $('padlock-status').querySelector('kbd')!.textContent = keyLabel(keys.padlock);
+      $('missile-warning').querySelector('kbd')!.textContent = keyLabel(keys.countermeasures);
+      $('mouse-yoke').querySelector('kbd')!.textContent = keyLabel(keys.recenter);
+      $('cannon-state').textContent = `READY [${keyLabel(keys.fire)}]`;
+      $('operation-panel').querySelector('small')!.textContent = `${keyLabel(keys.objective)} TRACKS OBJECTIVE · ${keyLabel(keys.target)} SELECTS CONTACT`;
+      const bar = document.querySelector('.statusbar > span:last-child')!;
+      bar.replaceChildren();
+      const targetHint = document.createElement('kbd'); targetHint.textContent = keyLabel(keys.target);
+      const helpHint = document.createElement('kbd'); helpHint.textContent = 'H';
+      const pauseHint = document.createElement('kbd'); pauseHint.textContent = 'ESC';
+      bar.append(targetHint, ' TARGET / ', helpHint, ' CONTROLS / ', pauseHint, ' PAUSE');
+    };
+    const renderBindings = () => {
+      const list = $('binding-list');
+      list.replaceChildren();
+      for (const action of Object.keys(DEFAULT_BINDINGS) as Binding[]) {
+        const row = document.createElement('div');
+        row.className = 'settings-row';
+        const label = document.createElement('span');
+        label.textContent = BINDING_LABELS[action];
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'secondary-button';
+        button.textContent = keyLabel(this.preferences.bindings[action]);
+        button.setAttribute('aria-label', `Remap ${BINDING_LABELS[action]} (currently ${button.textContent})`);
+        button.onclick = () => { pendingBinding = action; button.textContent = 'PRESS KEY…'; button.focus(); };
+        row.append(label, button);
+        list.append(row);
+      }
+    };
+    let pendingBinding: Binding | null = null;
+    window.addEventListener('keydown', (event) => {
+      if (!pendingBinding) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      if (event.code === 'Escape') { pendingBinding = null; renderBindings(); return; }
+      const updated = bindKey(this.preferences.bindings, pendingBinding, event.code);
+      if (!updated) { $('settings-status').textContent = 'Key unavailable or already assigned. Choose a different key, or press Escape to cancel.'; return; }
+      this.preferences.bindings = updated;
+      pendingBinding = null;
+      applyPreferences(); renderBindings(); savePreferences();
+    }, true);
+    $('reset-bindings').onclick = () => { pendingBinding = null; this.preferences.bindings = { ...DEFAULT_BINDINGS }; applyPreferences(); renderBindings(); savePreferences(); };
+    $<HTMLDialogElement>('manual').addEventListener('close', () => { pendingBinding = null; renderBindings(); });
+    $<HTMLInputElement>('audio-volume').oninput = () => { this.preferences.volume = Number($<HTMLInputElement>('audio-volume').value); applyPreferences(); savePreferences(); };
+    $<HTMLInputElement>('subtitles').onchange = () => { this.preferences.subtitles = $<HTMLInputElement>('subtitles').checked; applyPreferences(); savePreferences(); };
+    $<HTMLSelectElement>('hud-scale').onchange = () => { this.preferences.hudScale = Number($<HTMLSelectElement>('hud-scale').value); applyPreferences(); savePreferences(); };
+    $<HTMLInputElement>('reduced-effects').onchange = () => { this.preferences.reducedEffects = $<HTMLInputElement>('reduced-effects').checked; applyPreferences(); savePreferences(); };
+    applyPreferences(); renderBindings();
     this.input.onPause = () => {
       if ($<HTMLDialogElement>('manual').open) { this.closeManual(); return; }
       if (this.state === 'flying') this.pause('Take a breath, Lion. We’re holding position.');
@@ -161,7 +231,7 @@ export class Game {
       if (!this.operation || !this.objectiveMesh) { this.notice('NO NAVIGATION OBJECTIVE IN THIS MODE'); return; }
       this.objectiveSelected = !this.objectiveSelected;
       this.lock = 0;
-      this.notice(this.objectiveSelected ? 'TRACKING MISSION OBJECTIVE — TAB SELECTS HOSTILES' : 'HOSTILE TARGETING RESTORED');
+      this.notice(this.objectiveSelected ? `TRACKING MISSION OBJECTIVE — ${keyLabel(this.input.bindings.target)} SELECTS HOSTILES` : 'HOSTILE TARGETING RESTORED');
     };
     this.input.onMouseReleased = () => { if (this.state === 'flying') this.pause('Mouse released. Resume to recapture flight controls.'); };
     this.input.onMouseError = () => this.notice('MOUSE CAPTURE UNAVAILABLE — CLICK THE SCENE TO RETRY, OR CHOOSE SCREEN-POSITION STEERING IN H');
@@ -212,7 +282,6 @@ export class Game {
     for (const id of ['return-title', 'debrief-title', 'failure-title-button']) $(id).onclick = () => this.returnToTitle();
     $('view-last').onclick = () => this.viewLastResult();
     $('export-save').onclick = () => this.download(this.progress.export(), 'space-progress.json');
-    $('audio-volume').oninput = () => { this.audio.volume = Number($<HTMLInputElement>('audio-volume').value); };
     $('help-button').onclick = () => this.openManual();
     $('close-help').onclick = () => this.closeManual();
     $('export-report').onclick = () => this.exportReport();
@@ -626,7 +695,7 @@ export class Game {
     const entry = document.createElement('li'); entry.textContent = `${speaker}: ${line}`;
     $('radio-transcript').append(entry);
     if ($('radio-transcript').children.length > 32) $('radio-transcript').firstElementChild?.remove();
-    this.notice(line);
+    if (this.preferences.subtitles) this.notice(line);
   }
 
   private countermeasures() {
@@ -748,7 +817,7 @@ export class Game {
 
   private fireMissile() {
     if (this.state !== 'flying') return;
-    if (this.objectiveSelected) { this.notice('TRACKING OBJECTIVE — TAB SELECTS A HOSTILE FOR MISSILE LOCK'); return; }
+    if (this.objectiveSelected) { this.notice(`TRACKING OBJECTIVE — ${keyLabel(this.input.bindings.target)} SELECTS A HOSTILE FOR MISSILE LOCK`); return; }
     if (this.mode === 'mission' && ['flight', 'cannon', 'defense', 'focus'].includes(this.mission.stage)) { this.notice('MISSILE RACK SAFE — COMPLETE THE CURRENT SYSTEM CHECK'); return; }
     if (this.systems.missileCooldown > 0) { this.notice('MISSILE RACK RECHARGING'); return; }
     if (this.systems.ammo === 0) { this.notice('MISSILE RACK EMPTY — PULSE CANNON REMAINS AVAILABLE'); return; }
@@ -954,7 +1023,7 @@ export class Game {
 
   private explode(position: THREE.Vector3, count: number) {
     for (let i = 0; i < count; i++) {
-      if (this.particles.length >= 256) break;
+      if (this.particles.length >= (this.preferences.reducedEffects ? 32 : 256)) break;
       const mesh = new THREE.Mesh(this.particleGeometry, this.particleMaterial);
       mesh.position.copy(position);
       mesh.scale.setScalar(1 + Math.random() * 3);
@@ -1166,7 +1235,7 @@ export class Game {
     $('shield-bar').style.width = `${this.systems.shields / this.systems.stats.shields * 100}%`;
     $('ammo').textContent = String(this.systems.ammo);
     const locked = this.systems.systemsLocked;
-    $('cannon-state').textContent = locked ? `EMP LOCKOUT ${this.systems.empLockout.toFixed(1)}s` : this.systems.overheated ? 'OVERHEATED — COOLING' : `HEAT ${Math.round(this.systems.heat)}% [SPACE]`;
+    $('cannon-state').textContent = locked ? `EMP LOCKOUT ${this.systems.empLockout.toFixed(1)}s` : this.systems.overheated ? 'OVERHEATED — COOLING' : `HEAT ${Math.round(this.systems.heat)}% [${keyLabel(this.input.bindings.fire)}]`;
     $('heat-bar').style.width = `${this.systems.heat}%`;
     $('flare-state').textContent = locked ? 'SYSTEMS LOCKED' : this.systems.countermeasureCooldown > 0 ? `${this.systems.countermeasureCooldown.toFixed(1)}s` : 'READY';
     $('focus-state').textContent = locked ? 'SYSTEMS LOCKED' : this.systems.focusTime > 0 ? `ACTIVE ${this.systems.focusTime.toFixed(1)}s` : this.systems.focusCooldown > 0 ? `${this.systems.focusCooldown.toFixed(1)}s` : 'READY';
@@ -1192,7 +1261,7 @@ export class Game {
     $('boost-bar').style.width = `${this.flight.boost / this.flight.stats.boostCapacity * 100}%`;
     $('drive-state').textContent = this.flight.boosting ? '/ BOOST' : '/ CRUISE';
     $('lock-bar').style.width = `${this.lock * 100}%`;
-    $('lock-status').textContent = locked ? 'EMP LOCKOUT — SYSTEMS OFFLINE' : this.systems.ammo === 0 ? 'RACK EMPTY' : this.systems.missileCooldown > 0 ? `RECHARGING ${this.systems.missileCooldown.toFixed(1)}s` : this.lock === 1 ? 'LOCK CONFIRMED [M]' : this.lock > 0 ? `ACQUIRING ${Math.floor(this.lock * 100)}%` : 'SEEKING TARGET';
+    $('lock-status').textContent = locked ? 'EMP LOCKOUT — SYSTEMS OFFLINE' : this.systems.ammo === 0 ? 'RACK EMPTY' : this.systems.missileCooldown > 0 ? `RECHARGING ${this.systems.missileCooldown.toFixed(1)}s` : this.lock === 1 ? `LOCK CONFIRMED [${keyLabel(this.input.bindings.missile)}]` : this.lock > 0 ? `ACQUIRING ${Math.floor(this.lock * 100)}%` : 'SEEKING TARGET';
     $('lock-status').classList.toggle('locked', !locked && this.lock === 1);
     const forward = FORWARD.clone().applyQuaternion(this.flight.rotation);
     $('heading').textContent = String(Math.round((THREE.MathUtils.radToDeg(Math.atan2(forward.x, -forward.z)) + 360) % 360)).padStart(3, '0');
@@ -1237,7 +1306,7 @@ export class Game {
     }
     if (this.flight.position.length() > 5500 && active) this.notice('SECTOR LIMIT — AUTOPILOT CORRECTING COURSE');
     if (this.mode === 'mission' && active && this.mission.stage === 'flight') {
-      $('objective').textContent = `Flight check: ${this.mission.pitch ? '✓' : '□'} pitch · ${this.mission.yaw ? '✓' : '□'} yaw${this.input.settings.mode === 'yoke' ? ' (A/D)' : ''} · ${this.mission.roll ? '✓' : '□'} roll (${this.input.settings.mode === 'yoke' ? 'mouse or Q/E' : 'Q/E'}) · ${this.mission.boost ? '✓' : '□'} boost (Shift)`;
+      $('objective').textContent = `Flight check: ${this.mission.pitch ? '✓' : '□'} pitch · ${this.mission.yaw ? '✓' : '□'} yaw${this.input.settings.mode === 'yoke' ? ` (${keyLabel(this.input.bindings.yawLeft)}/${keyLabel(this.input.bindings.yawRight)})` : ''} · ${this.mission.roll ? '✓' : '□'} roll (${this.input.settings.mode === 'yoke' ? 'mouse or ' : ''}${keyLabel(this.input.bindings.rollLeft)}/${keyLabel(this.input.bindings.rollRight)}) · ${this.mission.boost ? '✓' : '□'} boost (${keyLabel(this.input.bindings.boost)})`;
     }
     this.drawRadar();
     this.updateOperationHud(active);

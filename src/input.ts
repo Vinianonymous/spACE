@@ -1,9 +1,11 @@
 import { DEFAULT_MOUSE, MOUSE_STORAGE_KEY, MouseFlight, parseMouseSettings, type MouseSettings } from './mouse-flight';
+import { DEFAULT_BINDINGS, type Bindings } from './preferences';
 
 export class Input {
   keys = new Set<string>();
   mouse = new MouseFlight();
   settings: MouseSettings = { ...DEFAULT_MOUSE };
+  bindings: Bindings = { ...DEFAULT_BINDINGS };
   private firing = false;
   private wasLocked = false;
   private mouseWarmupUntil = 0;
@@ -24,15 +26,15 @@ export class Input {
       const editing = event.target instanceof HTMLSelectElement || event.target instanceof HTMLInputElement ||
         event.target instanceof HTMLButtonElement;
       if (editing && event.code !== 'Escape') return;
-      if ((this.active && event.code === 'Tab') || ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
+      if ((this.active && Object.values(this.bindings).includes(event.code)) || ['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) event.preventDefault();
       if (!event.repeat) {
         if (event.code === 'Escape') this.onPause();
-        if (this.active && event.code === 'Tab') this.onTarget();
-        if (this.active && event.code === 'KeyM') this.onMissile();
-        if (this.active && event.code === 'KeyX') this.onCountermeasures();
-        if (this.active && event.code === 'KeyV') this.onFocus();
-        if (this.active && event.code === 'KeyG') this.onObjective();
-        if (this.active && event.code === 'KeyZ' && this.settings.mode === 'yoke') this.mouse.clear();
+        if (this.active && event.code === this.bindings.target) this.onTarget();
+        if (this.active && event.code === this.bindings.missile) this.onMissile();
+        if (this.active && event.code === this.bindings.countermeasures) this.onCountermeasures();
+        if (this.active && event.code === this.bindings.focus) this.onFocus();
+        if (this.active && event.code === this.bindings.objective) this.onObjective();
+        if (this.active && event.code === this.bindings.recenter && this.settings.mode === 'yoke') this.mouse.clear();
         if (event.code === 'KeyH') this.onHelp();
       }
       this.keys.add(event.code);
@@ -98,19 +100,19 @@ export class Input {
     this.mouse.clear();
   }
 
-  get fire() { return this.keys.has('Space') || this.firing; }
-  get padlock() { return this.active && this.keys.has('KeyC'); }
+  get fire() { return this.keys.has(this.bindings.fire) || this.firing; }
+  get padlock() { return this.active && this.keys.has(this.bindings.padlock); }
 
   flight(dt: number) {
     const axis = (positive: string[], negative: string[]) =>
       Number(positive.some((key) => this.keys.has(key))) - Number(negative.some((key) => this.keys.has(key)));
     const mouse = this.mouse.sample(this.settings, dt);
     return {
-      pitch: Math.max(-1, Math.min(1, axis(['KeyW', 'ArrowUp'], ['KeyS', 'ArrowDown']) + mouse.pitch)),
-      yaw: Math.max(-1, Math.min(1, axis(['KeyD', 'ArrowRight'], ['KeyA', 'ArrowLeft']) + mouse.yaw)),
-      roll: Math.max(-1, Math.min(1, axis(['KeyE'], ['KeyQ']) + mouse.roll)),
-      throttle: axis(['KeyR'], ['KeyF']),
-      boost: this.keys.has('ShiftLeft') || this.keys.has('ShiftRight'),
+      pitch: Math.max(-1, Math.min(1, axis([this.bindings.pitchUp, 'ArrowUp'], [this.bindings.pitchDown, 'ArrowDown']) + mouse.pitch)),
+      yaw: Math.max(-1, Math.min(1, axis([this.bindings.yawRight, 'ArrowRight'], [this.bindings.yawLeft, 'ArrowLeft']) + mouse.yaw)),
+      roll: Math.max(-1, Math.min(1, axis([this.bindings.rollRight], [this.bindings.rollLeft]) + mouse.roll)),
+      throttle: axis([this.bindings.throttleUp], [this.bindings.throttleDown]),
+      boost: this.keys.has(this.bindings.boost) || (this.bindings.boost === 'ShiftLeft' && !Object.values(this.bindings).includes('ShiftRight') && this.keys.has('ShiftRight')),
     };
   }
 }

@@ -68,7 +68,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="launch-meta"><span>2256</span><span>EXAVIUS TERRITORY</span><span>LIVE-FIRE EXERCISE</span></div>
       <button class="primary-button" id="launch">MISSION 01 / FIRST LIGHT <span>↗</span></button>
       <div class="launch-actions"><button class="secondary-button" id="campaign-button">MISSION SELECT</button><button class="secondary-button" id="survival-button">WAVE SURVIVAL</button><button class="secondary-button" id="open-hangar">HANGAR / REFIT</button><button class="secondary-button" id="exercise">PROVING GROUND</button><button class="secondary-button" id="view-last" hidden>LAST DEBRIEF</button><span id="credits">0 CR</span></div>
-      <div class="launch-note">THE VEXTRA OPERATION <span>•</span> v0.4 / ROADMAP 04</div>
+      <div class="launch-note">THE VEXTRA OPERATION <span>•</span> v0.4 / STEP 05 PREVIEW</div>
     </section>
 
     <section class="modal-panel briefing-panel" id="briefing-panel" aria-labelledby="briefing-title" hidden>
@@ -112,6 +112,7 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
     <dialog id="manual">
       <div class="dialog-heading"><div><div class="eyebrow">EXAVIUS / PILOT REFERENCE</div><h2>FLIGHT MANUAL</h2></div><button id="close-help" class="close-button" aria-label="Close flight manual">×</button></div>
       <p>Fly the reticle onto a drone. Hold your target in the acquisition cone until the brackets turn green, then launch a missile.</p>
+      <p class="manual-note">DEFAULT KEYS · LIVE ASSIGNMENTS ARE IN REMAP KEYBOARD CONTROLS BELOW.</p>
       <div class="controls-grid">
         <span>Keyboard pitch / yaw</span><b>W A S D / ARROWS</b>
         <span id="mouse-axis-label">Mouse pitch / yaw</span><b id="mouse-axis-control">RELATIVE MOTION</b>
@@ -131,7 +132,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <div class="settings-row"><label for="mouse-mode">MOUSE CONTROL</label><select id="mouse-mode"><option value="yoke">MOUSE YOKE · PITCH / ROLL</option><option value="relative" selected>RELATIVE FLIGHT (DEFAULT)</option><option value="position">SCREEN-POSITION STEERING</option></select></div>
       <div class="settings-row"><label for="mouse-sensitivity">SENSITIVITY <output id="sensitivity-value">1.00×</output></label><input id="mouse-sensitivity" type="range" min="0.25" max="2" step="0.05" value="1" /></div>
       <div class="settings-row"><label for="invert-pitch">INVERT MOUSE PITCH</label><input id="invert-pitch" type="checkbox" /></div>
-      <p class="manual-note" id="settings-status" role="status">Mouse preferences and earned mission credits save locally. Clearing browser data can remove them; use Export Progress to back up credits.</p>
+      <p class="manual-note" id="settings-status" role="status">Pilot preferences save in this browser. Progress exports do not include preferences; clearing browser data removes both.</p>
+      <details class="bindings"><summary>REMAP KEYBOARD CONTROLS</summary><p class="manual-note">Select an action, then press its new key. Escape cancels. H (manual), Escape (pause), and arrow steering remain fixed. Use Reset to restore defaults.</p><div id="binding-list"></div><button id="reset-bindings" class="secondary-button">RESET KEYBOARD DEFAULTS</button></details>
       <p class="manual-note">Ship handling, shields, weapons, heat recovery, lock acquisition, and ammunition follow your saved hangar loadout. Guided racks carry 24 rounds; heavy torpedoes carry eight and track more slowly. The free Kestrel loadout remains viable. Countermeasures recharge in eight seconds; Focus lasts five seconds, then recharges for 30. Scenery is non-collidable. The proving ground has no incoming fire or rewards.</p>
       <p class="manual-note">The lit 3D arrow uses the camera’s current rotation to point to your target. During padlock it instead shows your ship’s pitch, yaw, and bank relative to the target-facing view; align the arrow into the target to line up your nose. Green is close (≤350 m), red is far (≥1,600 m), with numeric range. Hold C to orbit the camera around your ship toward the target, keeping your ship in frame. Flight axes and weapon direction never follow the camera.</p>
       <p class="manual-note">G tracks convoy, salvage, depot, or command-vessel navigation; Tab returns to hostile selection. Protected objectives can fail a sortie when destroyed. Optional caches never block success. In Survival, run tokens buy six skills between waves; no token or skill persists after the run, and every tenth wave ends with a summoning boss.</p>
@@ -139,6 +141,9 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
       <p class="manual-note">Auto quality starts at 640p and steps down once to 480p after three consecutive seconds below roughly 52 FPS. Manual presets never change themselves.</p>
       <div class="settings-row"><label for="quality">RENDER QUALITY</label><select id="quality"><option value="auto">AUTO · ADAPTIVE 640p</option><option value="low">LOW · 480p</option><option value="medium" selected>MEDIUM · 640p</option><option value="high">HIGH · 900p</option></select></div>
       <div class="settings-row"><label for="audio-volume">EFFECTS VOLUME</label><input id="audio-volume" type="range" min="0" max="0.3" step="0.01" value="0.12" /></div>
+      <div class="settings-row"><label for="subtitles">RADIO SUBTITLES</label><input id="subtitles" type="checkbox" checked /></div>
+      <div class="settings-row"><label for="hud-scale">HUD SIZE</label><select id="hud-scale"><option value="0.9">COMPACT</option><option value="1" selected>STANDARD</option><option value="1.1">LARGE</option></select></div>
+      <div class="settings-row"><label for="reduced-effects">REDUCED EFFECTS</label><input id="reduced-effects" type="checkbox" /></div>
       <div class="report-actions"><button id="reset-benchmark" class="secondary-button">RESET BENCHMARK</button><button id="export-report" class="secondary-button">EXPORT REPORT ↓</button></div>
       <p class="manual-note">Reports contain frame timing, browser/GPU information, and resolution. Nothing is uploaded. Capture performance on real hardware before declaring a milestone pass.</p>
     </dialog>

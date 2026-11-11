@@ -2,7 +2,7 @@
 
 A browser-based, pixelated 3D arcade space-combat prototype set above Mars in 2256. Fly as **Lion**, Tetragon’s experimental rookie pilot, in Exavius’s EX-01 Kestrel.
 
-This is the **phase-4 campaign and Wave Survival build**: five sequential, replayable missions, six flyable hulls, ten interchangeable parts, three tiers per part, and persistent builds. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships now fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is a prototype, not a fully balanced v1.0 release.
+This is the **phase-4 campaign and Wave Survival build with step-5 release-preparation settings**: five sequential, replayable missions, six flyable hulls, ten interchangeable parts, three tiers per part, and persistent builds. Survival adds escalating waves, a separate run-token skill shop, and summoning bosses every tenth wave. Trusan and Naurae ships now fight differently: Trusan raiders overclock and ram, while Naurae charge EMPs and teleport when damaged. The eight-drone proving ground remains available. Art and sound are procedural; gameplay makes no external API or asset requests. This is a prototype, not a fully balanced v1.0 release.
 
 The flight HUD is visible only during active flight. Title, briefing, hangar, pause, debrief, and failure screens hide the combat readouts instead of leaving them over the menu. Local desktop packaging is documented as an optional path, not a platform change: [desktop packaging tradeoffs](docs/DESKTOP.md).
 
@@ -52,6 +52,8 @@ Alternatively, serve `dist/` on a static HTTPS host. Relative asset URLs support
 | Recenter mouse yoke | Z (in Mouse yoke mode) |
 | Pause / resume | Escape |
 | Flight manual and quality settings | H |
+
+The table lists **default** keyboard bindings. In **H → Remap Keyboard Controls**, click an action and press a key; Escape cancels and Reset restores defaults. H, Escape, and arrow steering remain fixed. Pilot settings also include saved effects volume/mute, radio subtitles, HUD size, and reduced effects. Radio subtitles are the only dialogue presentation (there is no voice-over); the pause-menu transcript remains available with subtitles off. Preferences are stored separately from campaign progress and are **not included** in Export Progress. [Step-5 status and release gates](docs/STEP-5.md).
 
 **Relative mouse flight is the default:** Launch/Resume captures the cursor with Pointer Lock. Mouse motion controls pitch/yaw; stopping the mouse returns to straight flight after brief smoothing. Escape releases the cursor and pauses. If capture fails, click the scene to retry or choose **Screen-position steering** in the manual. That fallback preserves the old center-relative cursor mode. Sensitivity and inverted pitch are configurable and saved locally. Keyboard controls remain available.
 

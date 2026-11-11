@@ -339,6 +339,8 @@ Each step is complete only when its checklist passes and its evidence is recorde
 
 **Deliverable:** A publicly deployable, release-tested browser build with documented support limits.
 
+**Status:** In progress. Remapping, pilot presentation settings, and Chromium/Firefox functional regression checks are implemented; see [step-5 status and remaining gates](docs/STEP-5.md). No release gate below is declared complete.
+
 - [ ] Pass the documented browser matrix, performance budgets, cold-start test, and 30-minute stability test.
 - [ ] Validate remapping, sensitivity, subtitles, HUD scaling, audio settings, reduced effects, and both difficulties.
 - [ ] Run the eight-person onboarding study and meet the learnability, first-session progression, combat-clarity, and customization targets.

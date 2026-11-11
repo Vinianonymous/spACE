@@ -4,7 +4,7 @@ body { margin: 0; overflow: hidden; }
 button, select { font: inherit; }
 button, a, select { -webkit-tap-highlight-color: transparent; }
 button { cursor: pointer; }
-button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--green); outline-offset: 5px; }
+button:focus-visible, a:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--green); outline-offset: 5px; }
 [hidden] { display: none !important; }
 #flight-deck { position: relative; height: 100dvh; min-height: 480px; overflow: hidden; }
 #viewport { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; display: block; }
@@ -22,7 +22,7 @@ button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid
 .text-button { border: 0; color: #b8c9c9; background: none; font-size: 10px; letter-spacing: 1.3px; padding: 12px 0; }
 kbd { display: inline-block; font-size: 10px; color: #becac8; border: 1px solid #80908c55; padding: 2px 5px; font-weight: normal; }
 .text-button kbd { margin-left: 10px; }
-.mission-panel { position: absolute; top: 125px; left: 42px; width: 290px; pointer-events: none; }
+.mission-panel { position: absolute; top: 125px; left: 42px; width: 290px; pointer-events: none; transform: scale(var(--hud-scale, 1)); transform-origin: top left; }
 .eyebrow { font-size: 9px; letter-spacing: 1.8px; color: var(--muted); }
 .mission-title { margin-top: 15px; font-size: 12px; font-weight: 700; letter-spacing: 1.2px; }
 .small-cross { color: var(--green); margin-right: 10px; }
@@ -34,7 +34,7 @@ kbd { display: inline-block; font-size: 10px; color: #becac8; border: 1px solid 
 .mission-count .muted { font-size: 9px; letter-spacing: 1px; color: #768c94; }
 .coordinate { margin-top: 23px; font-size: 8px; letter-spacing: 0.7px; color: #73878f; }
 .coordinate span { color: #4b636c; }
-.telemetry { position: absolute; top: 129px; right: 42px; width: 215px; pointer-events: none; }
+.telemetry { position: absolute; top: 129px; right: 42px; width: 215px; pointer-events: none; transform: scale(var(--hud-scale, 1)); transform-origin: top right; }
 .pilot { font: 18px var(--mono); margin: 12px 0 18px; }
 .pilot span { font-size: 9px; color: #93a3a6; }
 .telemetry-rule { height: 1px; background: var(--line); margin-bottom: 17px; }
@@ -104,8 +104,17 @@ h1 em { color: var(--green); font-style: normal; }
 .lock-meter { margin-top: 9px; width: 190px; } .lock-meter i { width: 0; }
 .locked { color: var(--green) !important; }
 .radio-block { padding: 4px 0 0 25px; border-left: 1px solid var(--line); max-width: 380px; justify-self: end; }
+body.radio-subtitles-off .radio-block { visibility: hidden; }
+body.reduced-effects .vignette { background: none; }
+body.reduced-effects .notice { transition: none; }
+.speed-block b { font-size: calc(52px * var(--hud-scale, 1)); }
+.weapon-row b { font-size: calc(10px * var(--hud-scale, 1)); }
+.bindings { border-top: 1px solid var(--line); padding: 14px 0; font: 10px var(--mono); }
+.bindings summary { cursor: pointer; color: var(--green); }
+.bindings .settings-row { padding: 5px 0; }
+.bindings .secondary-button { min-width: 115px; padding: 7px; }
 .radio-block .status-dot { margin-right: 7px; }
-.radio-block p { font-size: 12px; line-height: 1.7; color: #c1ceca; margin: 12px 0; }
+.radio-block p { font-size: calc(12px * var(--hud-scale, 1)); line-height: 1.7; color: #c1ceca; margin: 12px 0; }
 .radio-speaker { display: flex; justify-content: space-between; color: var(--green); font-size: 8px; letter-spacing: 1px; }
 .radio-speaker span { color: #7eac83; }
 .statusbar { position: absolute; left: 0; right: 0; bottom: 0; height: 35px; border-top: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; padding: 0 42px; color: #81969c; font-size: 8px; letter-spacing: 0.9px; background: #070e1599; pointer-events: none; }
